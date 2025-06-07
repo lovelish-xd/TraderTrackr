@@ -13,11 +13,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
+import { X } from "lucide-react"
 
 export default function NewTradePage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null)
+
   const [formData, setFormData] = useState({
     instrumentType: "",
     tradeType: "",
@@ -137,19 +140,15 @@ export default function NewTradePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    console.log('Form submission started')
 
     try {
       const { data: userData, error: userError } = await supabase.auth.getUser()
-      console.log('User data:', userData)
-      console.log('User error:', userError)
-
+      
       if (userError) {
         throw userError
       }
 
       const userId = userData.user?.id
-      console.log('User ID:', userId)
 
       if (!userId) {
         throw new Error("User not authenticated")
@@ -158,8 +157,32 @@ export default function NewTradePage() {
       const entryDateTime = `${formData.entryDate}T${formData.entryTime || "00:00"}:00`
       const exitDateTime = formData.exitDate ? `${formData.exitDate}T${formData.exitTime || "00:00"}:00` : null
 
-      const profitLoss = formData.exitPrice ? calculateProfitLoss() : null
+      let screenshotPath = null
 
+      if (screenshotFile) {
+        const fileExt = screenshotFile.name.split('.').pop()
+        const fileName = `${userId}-${Date.now()}.${fileExt}`
+        const filePath = `screenshots/${fileName}`
+        const { data, error } = await supabase.storage
+          .from('trade-images')
+          .upload(filePath, screenshotFile)
+
+        if (error) {
+          console.error("Upload error:", error)
+          toast({
+            title: "Screenshot Upload Error",
+            description: error.message || "Failed to upload screenshot.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        screenshotPath = filePath
+      }
+
+      if(formData.tradePerformanceType === "Loss"){
+        formData.tradePerformanceValue = String(-Math.abs(Number(formData.tradePerformanceValue)))
+      }
       
       const { error } = await supabase.from("trades").insert({
         user_id: userId,
@@ -184,6 +207,7 @@ export default function NewTradePage() {
         trade_performance_type: formData.tradePerformanceType,
         profit_loss: formData.tradePerformanceValue,
         currency: formData.currency,
+        trade_screenshot: screenshotPath
       })
 
       console.log('Supabase insert error:', error)
@@ -444,7 +468,7 @@ export default function NewTradePage() {
 
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Tarde Performance</CardTitle>
+              <CardTitle>Trade Performance</CardTitle>
               <CardDescription>Record your trade performance details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -477,6 +501,52 @@ export default function NewTradePage() {
                   />
                 </div>
                 
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Trade Screenshots</CardTitle>
+              <CardDescription>Record your relevant trade screenshots</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="screenshot"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        setScreenshotFile(file)
+                      }
+                    }}
+                    className="cursor-pointer h-[70%] [&::file-selector-button]:bg-[#185E61] [&::file-selector-button]:text-white [&::file-selector-button]:border-0 [&::file-selector-button]:px-4 [&::file-selector-button]:py-2 [&::file-selector-button]:rounded-md [&::file-selector-button]:cursor-pointer"
+                  />
+                  {screenshotFile && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setScreenshotFile(null);
+                          const fileInput = document.getElementById('screenshot') as HTMLInputElement;
+                          if (fileInput) {
+                            fileInput.value = '';
+                          }
+                        }}
+                        className="h-8 w-8"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Upload one or more screenshots (PNG, JPG, JPEG)
+                </p>
+              </div>
               </div>
             </CardContent>
           </Card>
@@ -535,7 +605,7 @@ export default function NewTradePage() {
             <Button variant="outline" type="button" onClick={() => router.back()}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="bg-[#186E61]">
               {isLoading ? "Saving..." : "Save Trade"}
             </Button>
           </CardFooter>

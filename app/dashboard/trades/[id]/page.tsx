@@ -11,6 +11,7 @@ import type { Trade } from "@/lib/supabase"
 import { ArrowLeft, Edit, Trash2 } from "lucide-react"
 
 export default function TradeDetailsPage({ params }: { params: { id: string } }) {
+
   const router = useRouter()
   const { toast } = useToast()
   const [trade, setTrade] = useState<Trade | null>(null)

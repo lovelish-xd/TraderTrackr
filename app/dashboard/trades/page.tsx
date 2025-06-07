@@ -48,15 +48,15 @@ export default function TradesPage() {
         let query = supabase.from("trades").select("*").eq("user_id", userId).order("entry_date", { ascending: false })
 
         // Apply filters
-        if (filters.instrumentType) {
+        if (filters.instrumentType && filters.instrumentType!="all") {
           query = query.eq("instrument_type", filters.instrumentType)
         }
 
-        if (filters.tradeType) {
+        if (filters.tradeType && filters.tradeType!="all") {
           query = query.eq("trade_type", filters.tradeType)
         }
 
-        if (filters.strategy) {
+        if (filters.strategy && filters.strategy!="all") {
           query = query.eq("strategy", filters.strategy)
         }
 
@@ -71,7 +71,7 @@ export default function TradesPage() {
         }
 
         // Date range filter
-        if (filters.dateRange) {
+        if (filters.dateRange && filters.dateRange!="all") {
           const now = new Date()
           const startDate = new Date()
 
@@ -210,11 +210,11 @@ export default function TradesPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Trades</h1>
           <div className="flex gap-2">
-            <Button onClick={exportToCsv}>
+            <Button onClick={exportToCsv} className="bg-[#185E61]">
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
-            <Button asChild>
+            <Button asChild className="bg-[#185E61]">
               <Link href="/dashboard/trades/new">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Trade
@@ -226,7 +226,15 @@ export default function TradesPage() {
         <Card>
           <CardHeader>
             <CardTitle>Filters</CardTitle>
-            <CardDescription>Filter your trades by various criteria</CardDescription>
+            <CardDescription>
+              <div className="flex justify-between items-center">
+                <span>Filter your trades by various criteria</span>
+                <Button variant="outline" onClick={clearFilters} className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                Clear Filters
+                </Button>
+              </div>
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
@@ -250,12 +258,36 @@ export default function TradesPage() {
                   <SelectItem value="all">All Instruments</SelectItem>
                   <SelectItem value="Equity">Equity</SelectItem>
                   <SelectItem value="Options">Options</SelectItem>
+                  <SelectItem value="Spot">Spot</SelectItem>
                   <SelectItem value="Futures">Futures</SelectItem>
                   <SelectItem value="Forex">Forex</SelectItem>
                   <SelectItem value="Crypto">Crypto</SelectItem>
                   <SelectItem value="ETF">ETF</SelectItem>
+                  <SelectItem value="Commodity">Commodity</SelectItem>
+                  <SelectItem value="Index">Index</SelectItem>
                 </SelectContent>
               </Select>
+
+              <Select
+                value={filters.tradeType}
+                onValueChange={(value) => handleFilterChange("tradeType", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Trade Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="Buy">Buy</SelectItem>
+                  <SelectItem value="Call">Call</SelectItem>
+                  <SelectItem value="Long">Long</SelectItem>
+                  <SelectItem value="Short">Short</SelectItem>
+                  <SelectItem value="Buy Call">Buy Call</SelectItem>
+                  <SelectItem value="Sell Call">Sell Call</SelectItem>
+                  <SelectItem value="Buy Put">Buy Put</SelectItem>
+                  <SelectItem value="Sell Put">Sell Put</SelectItem>
+                </SelectContent>
+              </Select>
+
               <Select value={filters.profitLoss} onValueChange={(value) => handleFilterChange("profitLoss", value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Profit/Loss" />
@@ -278,6 +310,11 @@ export default function TradesPage() {
                   <SelectItem value="Momentum">Momentum</SelectItem>
                   <SelectItem value="Swing Trading">Swing Trading</SelectItem>
                   <SelectItem value="Day Trading">Day Trading</SelectItem>
+                  <SelectItem value="Position Trading">Position Trading</SelectItem>
+                  <SelectItem value="Value Investing">Value Investing</SelectItem>
+                  <SelectItem value="Growth Investing">Growth Investing</SelectItem>
+                  <SelectItem value="Dividend Investing">Dividend Investing</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={filters.dateRange} onValueChange={(value) => handleFilterChange("dateRange", value)}>
@@ -292,10 +329,7 @@ export default function TradesPage() {
                   <SelectItem value="year">Last Year</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" onClick={clearFilters} className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Clear Filters
-              </Button>
+              
             </div>
           </CardContent>
         </Card>
@@ -328,6 +362,7 @@ export default function TradesPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Ticker</TableHead>
+                      <TableHead>Instrument</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Entry Date</TableHead>
                       <TableHead>Exit Date</TableHead>
@@ -352,6 +387,7 @@ export default function TradesPage() {
                       >
                         <TableCell className="font-medium">{trade.ticker_symbol}</TableCell>
                         <TableCell>{trade.instrument_type}</TableCell>
+                        <TableCell>{trade.trade_type}</TableCell>
                         <TableCell>{formatDate(trade.entry_date)}</TableCell>
                         <TableCell>{trade.exit_date ? formatDate(trade.exit_date) : "-"}</TableCell>
                         <TableCell>{trade.entry_price}</TableCell>

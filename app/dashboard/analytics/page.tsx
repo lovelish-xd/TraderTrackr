@@ -380,7 +380,7 @@ export default function AnalyticsPage() {
                       <CardTitle>Instrument Distribution</CardTitle>
                       <CardDescription>Distribution of trades by instrument type</CardDescription>
                     </CardHeader>
-                    <CardContent className="h-[500px] flex flex-col gap-6">
+                    <CardContent className="h-full flex flex-col gap-6">
                       <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <RePieChart>
@@ -422,7 +422,7 @@ export default function AnalyticsPage() {
                       <CardTitle>Instrument Performance</CardTitle>
                       <CardDescription>Profit/loss by instrument type</CardDescription>
                     </CardHeader>
-                    <CardContent className="h-[500px] flex flex-col gap-6">
+                    <CardContent className="h-full flex flex-col gap-6">
                       <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <ReBarChart data={instrumentPerformance}>
@@ -478,7 +478,7 @@ export default function AnalyticsPage() {
                       <CardTitle>Strategy Distribution</CardTitle>
                       <CardDescription>Distribution of trades by strategy</CardDescription>
                     </CardHeader>
-                    <CardContent className="h-[500px] flex flex-col gap-6">
+                    <CardContent className="h-full flex flex-col gap-6">
                       <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <RePieChart>
@@ -520,7 +520,7 @@ export default function AnalyticsPage() {
                       <CardTitle>Strategy Performance</CardTitle>
                       <CardDescription>Profit/loss by strategy</CardDescription>
                     </CardHeader>
-                    <CardContent className="h-[500px] flex flex-col gap-6">
+                    <CardContent className="h-full flex flex-col gap-6">
                       <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <ReBarChart data={strategyPerformance}>

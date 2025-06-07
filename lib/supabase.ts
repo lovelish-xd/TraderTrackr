@@ -64,6 +64,7 @@ export type Trade = {
   market_conditions?: string
   pre_trade_emotion?: string
   post_trade_reflection?: string
+  trade_screenshot?: string
   profit_loss?: number
   created_at: string
   updated_at: string
