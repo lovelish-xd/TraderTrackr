@@ -278,7 +278,7 @@ export default function TradesPage() {
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="Buy">Buy</SelectItem>
-                  <SelectItem value="Call">Call</SelectItem>
+                  <SelectItem value="Call">Sell</SelectItem>
                   <SelectItem value="Long">Long</SelectItem>
                   <SelectItem value="Short">Short</SelectItem>
                   <SelectItem value="Buy Call">Buy Call</SelectItem>

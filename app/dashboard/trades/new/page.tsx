@@ -116,25 +116,6 @@ export default function NewTradePage() {
     }
   }
 
-  const calculateProfitLoss = () => {
-    if (!formData.entryPrice || !formData.exitPrice || !formData.positionSize) {
-      return 0
-    }
-
-    const entryPrice = Number.parseFloat(formData.entryPrice)
-    const exitPrice = Number.parseFloat(formData.exitPrice)
-    const positionSize = Number.parseFloat(formData.positionSize)
-
-    if (formData.tradeType === "Long" || formData.tradeType === "Sell" || formData.tradeType === "Buy Call" || formData.tradeType === "Sell Call") {
-      return (exitPrice - entryPrice) * positionSize
-    } 
-    else if(formData.tradeType === "Buy"){
-      return 0;
-    }
-    else {
-      return (entryPrice - exitPrice) * positionSize
-    }
-  }
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -147,6 +128,7 @@ export default function NewTradePage() {
       if (userError) {
         throw userError
       }
+
 
       const userId = userData.user?.id
 
@@ -210,7 +192,6 @@ export default function NewTradePage() {
         trade_screenshot: screenshotPath
       })
 
-      console.log('Supabase insert error:', error)
 
       if (error) {
         throw error

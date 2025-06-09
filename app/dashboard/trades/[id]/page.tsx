@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
@@ -10,12 +10,15 @@ import { supabase } from "@/lib/supabase"
 import type { Trade } from "@/lib/supabase"
 import { ArrowLeft, Edit, Trash2 } from "lucide-react"
 
-export default function TradeDetailsPage({ params }: { params: { id: string } }) {
-
+export default function TradeDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  // Unwrap the params Promise using React.use()
+  const resolvedParams = use(params)
+  
   const router = useRouter()
   const { toast } = useToast()
   const [trade, setTrade] = useState<Trade | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [screenshotUrl, setScreenshotUrl] = useState("")
 
   useEffect(() => {
     const fetchTrade = async () => {
@@ -35,7 +38,7 @@ export default function TradeDetailsPage({ params }: { params: { id: string } })
         const { data, error } = await supabase
           .from("trades")
           .select("*")
-          .eq("id", params.id)
+          .eq("id", resolvedParams.id)
           .eq("user_id", userId)
           .single()
 
@@ -48,6 +51,57 @@ export default function TradeDetailsPage({ params }: { params: { id: string } })
         }
 
         setTrade(data as Trade)
+       // Fixed version with proper error handling and debugging
+const screenshotPath = data.trade_screenshot || ""
+console.log("Screenshot path from database:", screenshotPath)
+
+if (screenshotPath && screenshotPath.trim() !== "") {
+  try {
+    // First, check if the file exists in storage
+    const { data: fileList, error: listError } = await supabase.storage
+      .from("trade-images")
+      .list("", { search: screenshotPath })
+    
+    console.log("File exists check:", fileList, listError)
+    
+    // Create signed URL with longer expiration (24 hours)
+    const { data: imageData, error: imageError } = await supabase.storage
+      .from("trade-images")
+      .createSignedUrl(screenshotPath, 24 * 60 * 60) // 24 hours
+    
+    if (imageError) {
+      console.error("Error creating signed URL:", imageError)
+      console.error("Error details:", {
+        message: imageError.message,
+        statusCode: imageError.statusCode,
+        error: imageError.error
+      })
+    } else if (imageData?.signedUrl) {
+      console.log("Generated signed URL:", imageData.signedUrl)
+      setScreenshotUrl(imageData.signedUrl)
+      
+      // Verify the URL is accessible
+      try {
+        const response = await fetch(imageData.signedUrl, { method: 'HEAD' })
+        console.log("URL accessibility check:", response.status, response.statusText)
+      } catch (fetchError) {
+        console.error("URL not accessible:", fetchError)
+      }
+    } else {
+      console.error("No signed URL returned despite no error")
+    }
+  } catch (error) {
+    console.error("Unexpected error:", error)
+  }
+} else {
+  console.log("No screenshot path provided or path is empty")
+}
+
+// Alternative approach using public URL (if your bucket allows public access)
+// const publicUrl = supabase.storage.from("trade-images").getPublicUrl(screenshotPath)
+// console.log("Public URL:", publicUrl.data.publicUrl)
+// setScreenshotUrl(publicUrl.data.publicUrl)
+        
       } catch (error: any) {
         toast({
           title: "Error",
@@ -61,7 +115,8 @@ export default function TradeDetailsPage({ params }: { params: { id: string } })
     }
 
     fetchTrade()
-  }, [params.id, router, toast])
+
+  }, [resolvedParams.id, router, toast])
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this trade?")) {
@@ -69,7 +124,7 @@ export default function TradeDetailsPage({ params }: { params: { id: string } })
     }
 
     try {
-      const { error } = await supabase.from("trades").delete().eq("id", params.id)
+      const { error } = await supabase.from("trades").delete().eq("id", resolvedParams.id)
 
       if (error) {
         throw error
@@ -128,7 +183,7 @@ export default function TradeDetailsPage({ params }: { params: { id: string } })
             <h1 className="text-3xl font-bold">Trade Details</h1>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => router.push(`/dashboard/trades/${params.id}/edit`)}>
+            <Button variant="outline" onClick={() => router.push(`/dashboard/trades/${resolvedParams.id}/edit`)}>
               <Edit className="mr-2 h-4 w-4" />
               Edit Trade
             </Button>
@@ -262,6 +317,24 @@ export default function TradeDetailsPage({ params }: { params: { id: string } })
               </CardContent>
             </Card>
           )}
+          {screenshotUrl && (
+  <Card className="md:col-span-2">
+    <CardHeader>
+      <CardTitle>Trade Screenshot</CardTitle>
+      <CardDescription>A visual reference associated with this trade</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <div className="w-full rounded-md overflow-hidden border">
+        <img
+          src={screenshotUrl}
+          alt="Trade Screenshot"
+          className="w-full h-auto object-contain"
+        />
+      </div>
+    </CardContent>
+  </Card>
+)}
+
         </div>
       </div>
     </DashboardLayout>
