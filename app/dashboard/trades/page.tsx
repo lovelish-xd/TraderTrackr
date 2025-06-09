@@ -29,6 +29,8 @@ export default function TradesPage() {
     dateRange: "",
   })
   const router = useRouter()
+  const [currentPage, setCurrentPage] = useState(1)
+  const tradesPerPage = 10
 
   useEffect(() => {
     const fetchTrades = async () => {
@@ -107,6 +109,7 @@ export default function TradesPage() {
     }
 
     fetchTrades()
+    setCurrentPage(1) // Reset to first page when filters change
   }, [toast, filters])
 
   const handleFilterChange = (name: string, value: string) => {
@@ -114,6 +117,7 @@ export default function TradesPage() {
       ...filters,
       [name]: value,
     })
+    setCurrentPage(1)
   }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,6 +125,7 @@ export default function TradesPage() {
       ...filters,
       search: e.target.value,
     })
+    setCurrentPage(1)
   }
 
   const clearFilters = () => {
@@ -132,6 +137,7 @@ export default function TradesPage() {
       search: "",
       dateRange: "",
     })
+    setCurrentPage(1)
   }
 
   const formatDate = (dateString: string) => {
@@ -203,6 +209,12 @@ export default function TradesPage() {
   const handleTradeClick = (tradeId: string) => {
     router.push(`/dashboard/trades/${tradeId}`)
   }
+
+  // Pagination logic
+  const indexOfLastTrade = currentPage * tradesPerPage
+  const indexOfFirstTrade = indexOfLastTrade - tradesPerPage
+  const currentTrades = trades.slice(indexOfFirstTrade, indexOfLastTrade)
+  const totalPages = Math.ceil(trades.length / tradesPerPage)
 
   return (
     <DashboardLayout>
@@ -379,7 +391,7 @@ export default function TradesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {trades.map((trade) => (
+                    {currentTrades.map((trade) => (
                       <TableRow 
                         key={trade.id} 
                         className="cursor-pointer hover:bg-muted/50"
@@ -405,6 +417,77 @@ export default function TradesPage() {
                     ))}
                   </TableBody>
                 </Table>
+                {/* Pagination Controls */}
+                <div className="flex justify-end items-center gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                  >
+                    Previous
+                  </Button>
+                  {/* Windowed Pagination with Ellipses */}
+                  {(() => {
+                    const pageButtons = []
+                    const pageWindow = 2 // Number of pages to show on each side of current
+                    let startPage = Math.max(1, currentPage - pageWindow)
+                    let endPage = Math.min(totalPages, currentPage + pageWindow)
+
+                    if (startPage > 1) {
+                      pageButtons.push(
+                        <Button
+                          key={1}
+                          variant={currentPage === 1 ? "default" : "outline"}
+                          style={currentPage === 1 ? { backgroundColor: '#185E61', color: '#fff' } : {}}
+                          onClick={() => setCurrentPage(1)}
+                        >
+                          1
+                        </Button>
+                      )
+                      if (startPage > 2) {
+                        pageButtons.push(<span key="start-ellipsis">...</span>)
+                      }
+                    }
+
+                    for (let i = startPage; i <= endPage; i++) {
+                      pageButtons.push(
+                        <Button
+                          key={i}
+                          variant={currentPage === i ? "default" : "outline"}
+                          style={currentPage === i ? { backgroundColor: '#185E61', color: '#fff' } : {}}
+                          onClick={() => setCurrentPage(i)}
+                        >
+                          {i}
+                        </Button>
+                      )
+                    }
+
+                    if (endPage < totalPages) {
+                      if (endPage < totalPages - 1) {
+                        pageButtons.push(<span key="end-ellipsis">...</span>)
+                      }
+                      pageButtons.push(
+                        <Button
+                          key={totalPages}
+                          variant={currentPage === totalPages ? "default" : "outline"}
+                          style={currentPage === totalPages ? { backgroundColor: '#185E61', color: '#fff' } : {}}
+                          onClick={() => setCurrentPage(totalPages)}
+                        >
+                          {totalPages}
+                        </Button>
+                      )
+                    }
+
+                    return pageButtons
+                  })()}
+                  <Button
+                    variant="outline"
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>

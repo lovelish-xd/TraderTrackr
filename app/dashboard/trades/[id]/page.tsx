@@ -72,18 +72,14 @@ if (screenshotPath && screenshotPath.trim() !== "") {
     if (imageError) {
       console.error("Error creating signed URL:", imageError)
       console.error("Error details:", {
-        message: imageError.message,
-        statusCode: imageError.statusCode,
-        error: imageError.error
+        message: imageError.message
       })
     } else if (imageData?.signedUrl) {
-      console.log("Generated signed URL:", imageData.signedUrl)
       setScreenshotUrl(imageData.signedUrl)
       
       // Verify the URL is accessible
       try {
         const response = await fetch(imageData.signedUrl, { method: 'HEAD' })
-        console.log("URL accessibility check:", response.status, response.statusText)
       } catch (fetchError) {
         console.error("URL not accessible:", fetchError)
       }
@@ -96,11 +92,6 @@ if (screenshotPath && screenshotPath.trim() !== "") {
 } else {
   console.log("No screenshot path provided or path is empty")
 }
-
-// Alternative approach using public URL (if your bucket allows public access)
-// const publicUrl = supabase.storage.from("trade-images").getPublicUrl(screenshotPath)
-// console.log("Public URL:", publicUrl.data.publicUrl)
-// setScreenshotUrl(publicUrl.data.publicUrl)
         
       } catch (error: any) {
         toast({

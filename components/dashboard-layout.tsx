@@ -152,7 +152,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       key={item.name}
                       href={item.href}
                       className={`-mx-3 flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium ${
-                        pathname === item.href
+                        (item.href === "/dashboard"
+                          ? pathname === item.href
+                          : pathname.startsWith(item.href))
                           ? "bg-[#185E61] text-primary-foreground"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
