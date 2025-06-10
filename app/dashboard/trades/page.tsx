@@ -418,76 +418,78 @@ export default function TradesPage() {
                   </TableBody>
                 </Table>
                 {/* Pagination Controls */}
-                <div className="flex justify-end items-center gap-2 mt-4">
-                  <Button
-                    variant="outline"
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                  >
-                    Previous
-                  </Button>
-                  {/* Windowed Pagination with Ellipses */}
-                  {(() => {
-                    const pageButtons = []
-                    const pageWindow = 2 // Number of pages to show on each side of current
-                    let startPage = Math.max(1, currentPage - pageWindow)
-                    let endPage = Math.min(totalPages, currentPage + pageWindow)
+                {currentTrades.length >= 10 && (
+                  <div className="flex justify-end items-center gap-2 mt-4">
+                    <Button
+                      variant="outline"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                    >
+                      Previous
+                    </Button>
+                    {/* Windowed Pagination with Ellipses */}
+                    {(() => {
+                      const pageButtons = []
+                      const pageWindow = 2 // Number of pages to show on each side of current
+                      let startPage = Math.max(1, currentPage - pageWindow)
+                      let endPage = Math.min(totalPages, currentPage + pageWindow)
 
-                    if (startPage > 1) {
-                      pageButtons.push(
-                        <Button
-                          key={1}
-                          variant={currentPage === 1 ? "default" : "outline"}
-                          style={currentPage === 1 ? { backgroundColor: '#185E61', color: '#fff' } : {}}
-                          onClick={() => setCurrentPage(1)}
-                        >
-                          1
-                        </Button>
-                      )
-                      if (startPage > 2) {
-                        pageButtons.push(<span key="start-ellipsis">...</span>)
+                      if (startPage > 1) {
+                        pageButtons.push(
+                          <Button
+                            key={1}
+                            variant={currentPage === 1 ? "default" : "outline"}
+                            style={currentPage === 1 ? { backgroundColor: '#185E61', color: '#fff' } : {}}
+                            onClick={() => setCurrentPage(1)}
+                          >
+                            1
+                          </Button>
+                        )
+                        if (startPage > 2) {
+                          pageButtons.push(<span key="start-ellipsis">...</span>)
+                        }
                       }
-                    }
 
-                    for (let i = startPage; i <= endPage; i++) {
-                      pageButtons.push(
-                        <Button
-                          key={i}
-                          variant={currentPage === i ? "default" : "outline"}
-                          style={currentPage === i ? { backgroundColor: '#185E61', color: '#fff' } : {}}
-                          onClick={() => setCurrentPage(i)}
-                        >
-                          {i}
-                        </Button>
-                      )
-                    }
-
-                    if (endPage < totalPages) {
-                      if (endPage < totalPages - 1) {
-                        pageButtons.push(<span key="end-ellipsis">...</span>)
+                      for (let i = startPage; i <= endPage; i++) {
+                        pageButtons.push(
+                          <Button
+                            key={i}
+                            variant={currentPage === i ? "default" : "outline"}
+                            style={currentPage === i ? { backgroundColor: '#185E61', color: '#fff' } : {}}
+                            onClick={() => setCurrentPage(i)}
+                          >
+                            {i}
+                          </Button>
+                        )
                       }
-                      pageButtons.push(
-                        <Button
-                          key={totalPages}
-                          variant={currentPage === totalPages ? "default" : "outline"}
-                          style={currentPage === totalPages ? { backgroundColor: '#185E61', color: '#fff' } : {}}
-                          onClick={() => setCurrentPage(totalPages)}
-                        >
-                          {totalPages}
-                        </Button>
-                      )
-                    }
 
-                    return pageButtons
-                  })()}
-                  <Button
-                    variant="outline"
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
+                      if (endPage < totalPages) {
+                        if (endPage < totalPages - 1) {
+                          pageButtons.push(<span key="end-ellipsis">...</span>)
+                        }
+                        pageButtons.push(
+                          <Button
+                            key={totalPages}
+                            variant={currentPage === totalPages ? "default" : "outline"}
+                            style={currentPage === totalPages ? { backgroundColor: '#185E61', color: '#fff' } : {}}
+                            onClick={() => setCurrentPage(totalPages)}
+                          >
+                            {totalPages}
+                          </Button>
+                        )
+                      }
+
+                      return pageButtons
+                    })()}
+                    <Button
+                      variant="outline"
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

@@ -426,8 +426,15 @@ export default function AnalyticsPage() {
                       <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <ReBarChart data={instrumentPerformance}>
-                            <XAxis dataKey="name" />
-                            <YAxis />
+                            <XAxis 
+                              dataKey="name" 
+                              angle={-45}
+                              textAnchor="end"
+                              height={70}
+                              interval={0}
+                              tick={{ fontSize: 13 }}
+                            />
+                            <YAxis tick={{ fontSize: 13 }} />
                             <ReTooltip
                               formatter={(value: number) =>
                                 `${value >= 0 ? "+" : "-"}$${Math.abs(value).toFixed(2)}`
@@ -524,8 +531,17 @@ export default function AnalyticsPage() {
                       <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <ReBarChart data={strategyPerformance}>
-                            <XAxis dataKey="name" />
-                            <YAxis />
+                          <XAxis 
+                              dataKey="name" 
+                              angle={-45}
+                              textAnchor="end"
+                              height={90}
+                              interval={0}
+                              tick={{ fontSize: 13 }}
+                            />
+                            <YAxis 
+                              tick={{ fontSize: 13 }}
+                            />
                             <ReTooltip
                               formatter={(value: number) =>
                                 `${value >= 0 ? "+" : "-"}$${Math.abs(value).toFixed(2)}`
