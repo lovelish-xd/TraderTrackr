@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase"
 
 
 export default function TradingCalendar() {
-  const [currentDate, setCurrentDate] = useState<Date>(new Date(2025, 5, 1)); // June 2025
+  const [currentDate, setCurrentDate] = useState<Date>(new Date(2025, 5, 1)); 
   const [expandedCell, setExpandedCell] = useState<string | null>(null);
   const [tradeData, setTradeData] = useState<Record<string, { profit: number; trades: number }>>({});
 
@@ -47,7 +47,7 @@ export default function TradingCalendar() {
     };
   
     fetchTrades();
-  }, [currentDate]); // Add dependency if you want to reload when month changes
+  }, [currentDate]);
   
 
 
@@ -59,7 +59,7 @@ export default function TradingCalendar() {
     const month = date.getMonth();
 
     const firstDay = new Date(year, month, 1);
-    const firstDayOfWeek = (firstDay.getDay() + 6) % 7; // Monday as 0
+    const firstDayOfWeek = (firstDay.getDay() + 6) % 7;
 
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
