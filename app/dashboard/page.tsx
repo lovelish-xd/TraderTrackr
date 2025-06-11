@@ -331,6 +331,7 @@ export default function DashboardPage() {
                       </div>
                     </CardContent>
                   </Card>
+                  
                 </div>
               </TabsContent>
               <TabsContent value="analytics" className="space-y-4">

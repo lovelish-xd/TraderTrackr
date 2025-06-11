@@ -32,7 +32,93 @@ export default function AnalyticsPage() {
   const [strategyDistribution, setStrategyDistribution] = useState<any[]>([])
   const [strategyPerformance, setStrategyPerformance] = useState<any[]>([])
   const [equityCurve, setEquityCurve] = useState<{ date: string; value: number }[]>([])
+  const [tradePerformanceData, setTradePerformanceData] = useState<any[]>([])
+  const [winLossData, setWinLossData] = useState<any[]>([])
 
+  // Utility functions for grouping
+  function groupTradesByDay(trades: Trade[]) {
+    const map: Record<string, number> = {}
+    trades.forEach((trade) => {
+      const date = new Date(trade.entry_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
+      map[date] = (map[date] || 0) + (trade.profit_loss || 0)
+    })
+    return Object.entries(map).map(([date, value]) => ({ label: date, value }))
+  }
+
+  function groupTradesByMonth(trades: Trade[]) {
+    const map: Record<string, number> = {}
+    trades.forEach((trade) => {
+      const date = new Date(trade.entry_date)
+      const label = date.toLocaleString("en-GB", { month: "short", year: "2-digit" })
+      map[label] = (map[label] || 0) + (trade.profit_loss || 0)
+    })
+    // Sort by actual date ascending
+    const sorted = Object.entries(map).map(([label, value]) => {
+      // Parse month and year from label
+      const [monthStr, yearStr] = label.split(' ')
+      const month = new Date(Date.parse(monthStr + " 1, 2000")).getMonth()
+      const year = 2000 + parseInt(yearStr)
+      return { label, value, sortKey: year * 12 + month }
+    }).sort((a, b) => a.sortKey - b.sortKey)
+    return sorted.map(({ label, value }) => ({ label, value }))
+  }
+
+  function groupTradesByQuarter(trades: Trade[]) {
+    const map: Record<string, number> = {}
+    trades.forEach((trade) => {
+      const date = new Date(trade.entry_date)
+      const year = date.getFullYear()
+      const quarter = Math.floor(date.getMonth() / 3) + 1
+      const label = `Q${quarter} '${String(year).slice(-2)}`
+      map[label] = (map[label] || 0) + (trade.profit_loss || 0)
+    })
+    return Object.entries(map).map(([label, value]) => ({ label, value }))
+  }
+
+  function groupTradesByYear(trades: Trade[]) {
+    const map: Record<string, number> = {}
+    trades.forEach((trade) => {
+      const date = new Date(trade.entry_date)
+      const label = date.getFullYear().toString()
+      map[label] = (map[label] || 0) + (trade.profit_loss || 0)
+    })
+    return Object.entries(map).map(([label, value]) => ({ label, value }))
+  }
+
+  function getTradePerformanceData(trades: Trade[], timeframe: string) {
+    if (timeframe === "7days") {
+      // Get last 7 days
+      const last7 = groupTradesByDay(trades)
+      // Ensure 7 bars (fill missing days with 0)
+      const days = []
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date()
+        d.setDate(d.getDate() - i)
+        const label = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
+        const found = last7.find((item) => item.label === label)
+        days.push({ label, value: found ? found.value : 0 })
+      }
+      return days
+    } else if (timeframe === "30days") {
+      // Group by month (should be 1 or 2 months)
+      return groupTradesByMonth(trades)
+    } else if (timeframe === "90days") {
+      // Group by quarter
+      return groupTradesByQuarter(trades)
+    } else {
+      // year or all
+      return groupTradesByYear(trades)
+    }
+  }
+
+  function getWinLossData(trades: Trade[]) {
+    const win = trades.filter((t) => t.profit_loss && t.profit_loss > 0).length
+    const loss = trades.filter((t) => t.profit_loss && t.profit_loss < 0).length
+    return [
+      { name: "Win", value: win },
+      { name: "Loss", value: loss },
+    ]
+  }
 
   useEffect(() => {
     const fetchTrades = async () => {
@@ -76,62 +162,68 @@ export default function AnalyticsPage() {
         }
 
         setTrades(data as Trade[])
-        const instrumentMap: Record<string, { count: number; PnL: number; }> = {}
-        const strategyMap : Record<string, { count: number; PnL: number; }> = {}
+        const instrumentMap: Record<string, { count: number; PnL: number; win: number; loss: number; }> = {}
+        const strategyMap: Record<string, { count: number; PnL: number; win: number; loss: number; }> = {}
 
         data.forEach((trade) => {
-        const type = trade.instrument_type || "Unknown"
-        if (!instrumentMap[type]) {
-          instrumentMap[type] = { count: 0, PnL: 0}
-        }
+          const type = trade.instrument_type || "Unknown"
+          if (!instrumentMap[type]) {
+            instrumentMap[type] = { count: 0, PnL: 0, win: 0, loss: 0 }
+          }
 
-        instrumentMap[type].count += 1
-        instrumentMap[type].PnL += trade.profit_loss || 0
-       
-      })
+          instrumentMap[type].count += 1
+          instrumentMap[type].PnL += trade.profit_loss || 0
+          if (trade.profit_loss > 0) instrumentMap[type].win += 1
+          else if (trade.profit_loss < 0) instrumentMap[type].loss += 1
+        })
 
-      data.forEach((trade) => {
-        const strategy = trade.strategy || "Unknown"
-        if (!strategyMap[strategy]) {
-          strategyMap[strategy] = { count: 0, PnL: 0}
-        }
+        data.forEach((trade) => {
+          const strategy = trade.strategy || "Unknown"
+          if (!strategyMap[strategy]) {
+            strategyMap[strategy] = { count: 0, PnL: 0, win: 0, loss: 0 }
+          }
 
-        strategyMap[strategy].count += 1
-        strategyMap[strategy].PnL += trade.profit_loss || 0
-       
-      })
+          strategyMap[strategy].count += 1
+          strategyMap[strategy].PnL += trade.profit_loss || 0
+          if (trade.profit_loss > 0) strategyMap[strategy].win += 1
+          else if (trade.profit_loss < 0) strategyMap[strategy].loss += 1
+        })
 
-      const distribution = Object.entries(instrumentMap).map(([type, value]) => ({
-        name: type,
-        value: value.count
-      }))
+        const distribution = Object.entries(instrumentMap).map(([type, value]) => ({
+          name: type,
+          value: value.count,
+        }))
 
-      const performance = Object.entries(instrumentMap).map(([type, value]) => ({
-        name: type,
-       PnL: parseFloat(value.PnL.toFixed(2))
-      }))
+        const performance = Object.entries(instrumentMap).map(([type, value]) => ({
+          name: type,
+          PnL: parseFloat(value.PnL.toFixed(2)),
+          winRate: value.count > 0 ? (value.win / value.count) * 100 : 0
+        }))
 
-      const strategyDistribution = Object.entries(strategyMap).map(([type, value]) => ({
-        name: type,
-        value: value.count
-      }))
+        const strategyDistribution = Object.entries(strategyMap).map(([type, value]) => ({
+          name: type,
+          value: value.count,
+        }))
 
-      const strategyPerformance = Object.entries(strategyMap).map(([type, value]) => ({
-        name: type,
-       PnL: parseFloat(value.PnL.toFixed(2))
-      }))
-      
+        const strategyPerformance = Object.entries(strategyMap).map(([type, value]) => ({
+          name: type,
+          PnL: parseFloat(value.PnL.toFixed(2)),
+          winRate: value.count > 0 ? (value.win / value.count) * 100 : 0
+        }))
 
-    
 
-      setInstrumentDistribution(distribution)
-      setInstrumentPerformance(performance)
-      setStrategyDistribution(strategyDistribution)
-      setStrategyPerformance(strategyPerformance)
 
-      
+
+        setInstrumentDistribution(distribution)
+        setInstrumentPerformance(performance)
+        setStrategyDistribution(strategyDistribution)
+        setStrategyPerformance(strategyPerformance)
+
+
         calculateMetrics(data as Trade[])
         setEquityCurve(getEquityCurveData(data as Trade[]))
+        setTradePerformanceData(getTradePerformanceData(data as Trade[], timeframe))
+        setWinLossData(getWinLossData(data as Trade[]))
       } catch (error: any) {
         toast({
           title: "Error",
@@ -189,7 +281,7 @@ export default function AnalyticsPage() {
   const getEquityCurveData = (trades: Trade[]) => {
     // Sort trades by date ascending
     const sortedTrades = [...trades].sort((a, b) => new Date(a.entry_date).getTime() - new Date(b.entry_date).getTime())
-  
+
     let cumulative = 0
     const curve = sortedTrades.map((trade) => {
       cumulative += trade.profit_loss || 0
@@ -198,10 +290,10 @@ export default function AnalyticsPage() {
         value: cumulative,
       }
     })
-  
+
     return curve
   }
-  
+
 
 
   const formatCurrency = (value: number) => {
@@ -348,29 +440,87 @@ export default function AnalyticsPage() {
                 <TabsTrigger value="strategies">Strategies</TabsTrigger>
               </TabsList>
               <TabsContent value="performance" className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <Card className="col-span-2">
-                    <CardHeader>
-                      <CardTitle>Trade Performance</CardTitle>
-                      <CardDescription>Your trading performance by {timeframe}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pl-2">
-                      <div className="h-[300px] w-full bg-muted/20 rounded-md flex items-center justify-center text-muted-foreground">
-                        Monthly Performance Chart
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Win/Loss Ratio</CardTitle>
-                      <CardDescription>Distribution of winning and losing trades</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pl-2">
-                      <div className="h-[300px] w-full bg-muted/20 rounded-md flex items-center justify-center text-muted-foreground">
-                        Win/Loss Pie Chart
-                      </div>
-                    </CardContent>
-                  </Card>
+                <div>
+                  {/* First Row - Bar Chart and Pie Chart */}
+                  <div className="grid gap-4 grid-cols-1 lg:grid-cols-3 mb-4">
+                    <Card className="lg:col-span-2">
+                      <CardHeader>
+                        <CardTitle>Trade Performance</CardTitle>
+                        <CardDescription>Your trading performance by {timeframe}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="pl-2">
+                        <div className="h-[200px] md:h-[300px] w-full min-w-0">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <ReBarChart data={tradePerformanceData}>
+                              <XAxis dataKey="label" tick={{ fontSize: 13 }} />
+                              <YAxis tick={{ fontSize: 13 }} />
+                              <ReTooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+                              <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="#8884d8">
+                                {tradePerformanceData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.value >= 0 ? "#22c55e" : "#ef4444"} />
+                                ))}
+                              </Bar>
+                            </ReBarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="lg:col-span-1">
+                      <CardHeader>
+                        <CardTitle>Win/Loss Ratio</CardTitle>
+                        <CardDescription>Distribution of winning and losing trades</CardDescription>
+                      </CardHeader>
+                      <CardContent className="pl-2 flex flex-col items-center">
+                        <div className="h-[200px] md:h-[300px] w-full max-w-xs min-w-0">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <RePieChart>
+                              <Pie
+                                data={winLossData}
+                                dataKey="value"
+                                nameKey="name"
+                                outerRadius={80}
+                                label
+                              >
+                                {winLossData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={index === 0 ? "#22c55e" : "#ef4444"} />
+                                ))}
+                              </Pie>
+                              <ReTooltip />
+                            </RePieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Second Row - Equity Curve */}
+                  <div className="grid gap-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Equity Curve</CardTitle>
+                        <CardDescription>Your cumulative profit/loss over time</CardDescription>
+                      </CardHeader>
+                      <CardContent className="h-[400px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <ReLineChart data={equityCurve}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="date" />
+                            <YAxis />
+                            <ReTooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+                            <Line
+                              type="monotone"
+                              dataKey="value"
+                              stroke="#185E61"
+                              strokeWidth={2}
+                              dot={{ r: 3 }}
+                              activeDot={{ r: 6 }}
+                            />
+                          </ReLineChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               </TabsContent>
               <TabsContent value="instruments" className="space-y-4">
@@ -400,21 +550,21 @@ export default function AnalyticsPage() {
                         </ResponsiveContainer>
                       </div>
                       <Table>
-                          <TableHeader className="bg-muted">
-                            <TableRow>
-                              <TableHead className="text-left">Instrument</TableHead>
-                              <TableHead className="text-center">Number of Trades</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {instrumentDistribution.map((item, index) => (
-                              <TableRow key={index}>
-                                <TableCell className="py-1">{item.name}</TableCell>
-                                <TableCell className="py-1 text-center">{item.value}</TableCell>
+                        <TableHeader className="bg-muted">
+                          <TableRow>
+                            <TableHead className="text-left">Instrument</TableHead>
+                            <TableHead className="text-center">Number of Trades</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {instrumentDistribution.map((item, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="py-1">{item.name}</TableCell>
+                              <TableCell className="py-1 text-center">{item.value}</TableCell>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </CardContent>
                   </Card>
                   <Card>
@@ -426,8 +576,8 @@ export default function AnalyticsPage() {
                       <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <ReBarChart data={instrumentPerformance}>
-                            <XAxis 
-                              dataKey="name" 
+                            <XAxis
+                              dataKey="name"
                               angle={-45}
                               textAnchor="end"
                               height={70}
@@ -454,26 +604,27 @@ export default function AnalyticsPage() {
                               ))}
                             </Bar>
                           </ReBarChart>
-                        </ResponsiveContainer>     
+                        </ResponsiveContainer>
                       </div>
                       <Table>
-                          <TableHeader className="bg-muted">
-                            <TableRow>
-                              <TableHead className="text-left">Instrument</TableHead>
-                              <TableHead className="text-center">PnL</TableHead>
+                        <TableHeader className="bg-muted">
+                          <TableRow>
+                            <TableHead className="text-left">Instrument</TableHead>
+                            <TableHead className="text-center">PnL</TableHead>
+                            <TableHead className="text-center">Win Rate</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {instrumentPerformance.map((item, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="py-1">{item.name}</TableCell>
+                              <TableCell className="py-1 text-center">${item.PnL}</TableCell>
+                              <TableCell className="py-1 text-center">{formatPercentage(item.winRate)}</TableCell>
                             </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {instrumentPerformance.map((item, index) => (
-                              <TableRow key={index}>
-                                
-                                <TableCell className="py-1">{item.name}</TableCell>
-                                <TableCell className="py-1 text-center">${item.PnL}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-          
+                          ))}
+                        </TableBody>
+                      </Table>
+
                     </CardContent>
                   </Card>
                 </div>
@@ -505,21 +656,21 @@ export default function AnalyticsPage() {
                         </ResponsiveContainer>
                       </div>
                       <Table>
-                          <TableHeader className="bg-muted">
-                            <TableRow>
-                              <TableHead className="text-left">Strategy</TableHead>
-                              <TableHead className="text-center">Number of Trades</TableHead>
+                        <TableHeader className="bg-muted">
+                          <TableRow>
+                            <TableHead className="text-left">Strategy</TableHead>
+                            <TableHead className="text-center">Number of Trades</TableHead>
                             </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {strategyDistribution.map((item, index) => (
-                              <TableRow key={index}>
-                                <TableCell className="py-1">{item.name}</TableCell>
-                                <TableCell className="py-1 text-center">{item.value}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {strategyDistribution.map((item, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="py-1">{item.name}</TableCell>
+                              <TableCell className="py-1 text-center">{item.value}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </CardContent>
                   </Card>
                   <Card>
@@ -531,15 +682,15 @@ export default function AnalyticsPage() {
                       <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <ReBarChart data={strategyPerformance}>
-                          <XAxis 
-                              dataKey="name" 
+                            <XAxis
+                              dataKey="name"
                               angle={-45}
                               textAnchor="end"
                               height={90}
                               interval={0}
                               tick={{ fontSize: 13 }}
                             />
-                            <YAxis 
+                            <YAxis
                               tick={{ fontSize: 13 }}
                             />
                             <ReTooltip
@@ -561,25 +712,27 @@ export default function AnalyticsPage() {
                               ))}
                             </Bar>
                           </ReBarChart>
-                        </ResponsiveContainer>     
+                        </ResponsiveContainer>
                       </div>
                       <Table>
-                          <TableHeader className="bg-muted">
-                            <TableRow>
-                              <TableHead className="text-left">Strategy</TableHead>
-                              <TableHead className="text-center">PnL</TableHead>
+                        <TableHeader className="bg-muted">
+                          <TableRow>
+                            <TableHead className="text-left">Strategy</TableHead>
+                            <TableHead className="text-center">PnL</TableHead>
+                            <TableHead className="text-center">Win Rate</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {strategyPerformance.map((item, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="py-1">{item.name}</TableCell>
+                              <TableCell className="py-1 text-center">${item.PnL}</TableCell>
+                              <TableCell className="py-1 text-center">{formatPercentage(item.winRate)}</TableCell>
                             </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {strategyPerformance.map((item, index) => (
-                              <TableRow key={index}>
-                                <TableCell className="py-1">{item.name}</TableCell>
-                                <TableCell className="py-1 text-center">${item.PnL}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-          
+                          ))}
+                        </TableBody>
+                      </Table>
+
                     </CardContent>
                   </Card>
                 </div>
