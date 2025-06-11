@@ -155,7 +155,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         (item.href === "/dashboard"
                           ? pathname === item.href
                           : pathname.startsWith(item.href))
-                          ? "bg-[#185E61] text-primary-foreground"
+                          ? "bg-[#185E61] text-white"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                       onClick={() => setIsMobileNavOpen(false)}
@@ -172,7 +172,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     href={item.href}
                     className={`-mx-3 flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium ${
                       pathname === item.href
-                        ? "bg-[#185E61] text-primary-foreground"
+                        ? "bg-[#185E61] text-white"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                     onClick={() => setIsMobileNavOpen(false)}
@@ -228,14 +228,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         href={item.href}
                         className={`group flex gap-x-3 rounded-md p-2 text-sm font-medium ${
                           pathname === item.href
-                            ? "bg-[#185E61] text-primary-foreground"
+                            ? "bg-[#185E61] text-white"
                             : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         }`}
                       >
                         <item.icon
                           className={`h-6 w-6 shrink-0 ${
                             pathname === item.href
-                              ? "text-primary-foreground"
+                              ? "text-white"
                               : "text-muted-foreground group-hover:text-foreground"
                           }`}
                         />
@@ -254,14 +254,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         href={item.href}
                         className={`group flex gap-x-3 rounded-md p-2 text-sm font-medium ${
                           pathname === item.href
-                            ? "bg-[#185E61] text-primary-foreground"
+                            ? "bg-[#185E61] text-white"
                             : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         }`}
                       >
                         <item.icon
                           className={`h-6 w-6 shrink-0 ${
                             pathname === item.href
-                              ? "text-primary-foreground"
+                              ? "text-white"
                               : "text-muted-foreground group-hover:text-foreground"
                           }`}
                         />

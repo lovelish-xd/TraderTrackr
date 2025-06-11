@@ -418,15 +418,17 @@ export default function TradesPage() {
                   </TableBody>
                 </Table>
                 {/* Pagination Controls */}
-                {currentTrades.length >= 10 && (
+                {totalPages > 1 && (
                   <div className="flex justify-end items-center gap-2 mt-4">
-                    <Button
-                      variant="outline"
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(currentPage - 1)}
-                    >
-                      Previous
-                    </Button>
+                    {/* Show Previous button only if not on first page */}
+                    {currentPage > 1 && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                      >
+                        Previous
+                      </Button>
+                    )}
                     {/* Windowed Pagination with Ellipses */}
                     {(() => {
                       const pageButtons = []
@@ -481,13 +483,15 @@ export default function TradesPage() {
 
                       return pageButtons
                     })()}
-                    <Button
-                      variant="outline"
-                      disabled={currentPage === totalPages || totalPages === 0}
-                      onClick={() => setCurrentPage(currentPage + 1)}
-                    >
-                      Next
-                    </Button>
+                    {/* Show Next button only if not on last page */}
+                    {currentPage < totalPages && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                      >
+                        Next
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>

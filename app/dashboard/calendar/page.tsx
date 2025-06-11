@@ -118,14 +118,14 @@ export default function TradingCalendar() {
     <DashboardLayout>
       <div className="p-4 sm:p-6 max-w-5xl mx-auto bg-gray-50 dark:bg-black min-h-screen">
         <div className="flex justify-between items-center mb-4 sm:mb-6">
-          <Button onClick={() => navigateMonth(-1)} variant="outline" className="gap-2 bg-[#185E61] hover:bg-[#2A7174]">
+          <Button onClick={() => navigateMonth(-1)} variant="outline" className="gap-2 bg-[#185E61] hover:bg-[#2A7174] hover:text-gray-200 text-gray-200 ">
             <ChevronLeft className="w-4 h-4" />
             Prev
           </Button>
           <h2 className="text-lg sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
             {getMonthName(currentDate)}
           </h2>
-          <Button onClick={() => navigateMonth(1)} variant="outline" className="gap-2 bg-[#185E61] hover:bg-[#2A7174] ">
+          <Button onClick={() => navigateMonth(1)} variant="outline" className="gap-2 bg-[#185E61] hover:bg-[#2A7174] hover:text-gray-200 text-gray-200">
             Next
             <ChevronRight className="w-4 h-4" />
           </Button>

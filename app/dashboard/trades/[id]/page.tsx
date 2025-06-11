@@ -51,47 +51,45 @@ export default function TradeDetailsPage({ params }: { params: Promise<{ id: str
         }
 
         setTrade(data as Trade)
-       // Fixed version with proper error handling and debugging
-const screenshotPath = data.trade_screenshot || ""
-console.log("Screenshot path from database:", screenshotPath)
-
-if (screenshotPath && screenshotPath.trim() !== "") {
-  try {
-    // First, check if the file exists in storage
-    const { data: fileList, error: listError } = await supabase.storage
-      .from("trade-images")
-      .list("", { search: screenshotPath })
-    
-    console.log("File exists check:", fileList, listError)
-    
-    // Create signed URL with longer expiration (24 hours)
-    const { data: imageData, error: imageError } = await supabase.storage
-      .from("trade-images")
-      .createSignedUrl(screenshotPath, 24 * 60 * 60) // 24 hours
-    
-    if (imageError) {
-      console.error("Error creating signed URL:", imageError)
-      console.error("Error details:", {
-        message: imageError.message
-      })
-    } else if (imageData?.signedUrl) {
-      setScreenshotUrl(imageData.signedUrl)
       
-      // Verify the URL is accessible
-      try {
-        const response = await fetch(imageData.signedUrl, { method: 'HEAD' })
-      } catch (fetchError) {
-        console.error("URL not accessible:", fetchError)
-      }
-    } else {
-      console.error("No signed URL returned despite no error")
-    }
-  } catch (error) {
-    console.error("Unexpected error:", error)
-  }
-} else {
-  console.log("No screenshot path provided or path is empty")
-}
+        const screenshotPath = data.trade_screenshot || ""
+
+
+        if (screenshotPath && screenshotPath.trim() !== "") {
+          try {
+
+            const { data: fileList, error: listError } = await supabase.storage
+              .from("trade-images")
+              .list("", { search: screenshotPath })
+                
+            // Create signed URL with longer expiration (24 hours)
+            const { data: imageData, error: imageError } = await supabase.storage
+              .from("trade-images")
+              .createSignedUrl(screenshotPath, 24 * 60 * 60) // 24 hours
+            
+            if (imageError) {
+              console.error("Error creating signed URL:", imageError)
+              console.error("Error details:", {
+                message: imageError.message
+              })
+            } else if (imageData?.signedUrl) {
+              setScreenshotUrl(imageData.signedUrl)
+              
+              // Verify the URL is accessible
+              try {
+                const response = await fetch(imageData.signedUrl, { method: 'HEAD' })
+              } catch (fetchError) {
+                console.error("URL not accessible:", fetchError)
+              }
+            } else {
+              console.error("No signed URL returned despite no error")
+            }
+          } catch (error) {
+            console.error("Unexpected error:", error)
+          }
+        } else {
+          console.log("No screenshot path provided or path is empty")
+        }
         
       } catch (error: any) {
         toast({
@@ -174,7 +172,7 @@ if (screenshotPath && screenshotPath.trim() !== "") {
             <h1 className="text-3xl font-bold">Trade Details</h1>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => router.push(`/dashboard/trades/${resolvedParams.id}/edit`)}>
+            <Button variant="outline" onClick={() => router.push(`/dashboard/trades/edit/${resolvedParams.id}`)}>
               <Edit className="mr-2 h-4 w-4" />
               Edit Trade
             </Button>

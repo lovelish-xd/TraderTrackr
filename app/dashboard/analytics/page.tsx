@@ -348,30 +348,30 @@ export default function AnalyticsPage() {
                 <TabsTrigger value="strategies">Strategies</TabsTrigger>
               </TabsList>
               <TabsContent value="performance" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Equity Curve</CardTitle>
-                  <CardDescription>Your cumulative profit/loss over time</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ReLineChart data={equityCurve}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <ReTooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        stroke="#185E61"
-                        strokeWidth={2}
-                        dot={{ r: 3 }}
-                        activeDot={{ r: 6 }}
-                      />
-                    </ReLineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <Card className="col-span-2">
+                    <CardHeader>
+                      <CardTitle>Trade Performance</CardTitle>
+                      <CardDescription>Your trading performance by {timeframe}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pl-2">
+                      <div className="h-[300px] w-full bg-muted/20 rounded-md flex items-center justify-center text-muted-foreground">
+                        Monthly Performance Chart
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Win/Loss Ratio</CardTitle>
+                      <CardDescription>Distribution of winning and losing trades</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pl-2">
+                      <div className="h-[300px] w-full bg-muted/20 rounded-md flex items-center justify-center text-muted-foreground">
+                        Win/Loss Pie Chart
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
               <TabsContent value="instruments" className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
