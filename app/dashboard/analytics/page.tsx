@@ -45,51 +45,75 @@ export default function AnalyticsPage() {
     return Object.entries(map).map(([date, value]) => ({ label: date, value }))
   }
 
-  function groupTradesByMonth(trades: Trade[]) {
-    const map: Record<string, number> = {}
+  function groupTradesByMonth(trades: Trade[], monthsBack = 6) {
+    const now = new Date();
+    const map: Record<string, number> = {};
     trades.forEach((trade) => {
-      const date = new Date(trade.entry_date)
-      const label = date.toLocaleString("en-GB", { month: "short", year: "2-digit" })
-      map[label] = (map[label] || 0) + (trade.profit_loss || 0)
-    })
-    // Sort by actual date ascending
-    const sorted = Object.entries(map).map(([label, value]) => {
-      // Parse month and year from label
-      const [monthStr, yearStr] = label.split(' ')
-      const month = new Date(Date.parse(monthStr + " 1, 2000")).getMonth()
-      const year = 2000 + parseInt(yearStr)
-      return { label, value, sortKey: year * 12 + month }
-    }).sort((a, b) => a.sortKey - b.sortKey)
-    return sorted.map(({ label, value }) => ({ label, value }))
+      const date = new Date(trade.entry_date);
+      const label = date.toLocaleString("en-GB", { month: "short", year: "2-digit" });
+      map[label] = (map[label] || 0) + (trade.profit_loss || 0);
+    });
+    // Fill missing months
+    const result = [];
+    for (let i = monthsBack - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const label = d.toLocaleString("en-GB", { month: "short", year: "2-digit" });
+      result.push({ label, value: map[label] || 0 });
+    }
+    return result;
   }
 
   function groupTradesByQuarter(trades: Trade[]) {
-    const map: Record<string, number> = {}
+    const map: Record<string, number> = {};
+    let minYear = new Date().getFullYear();
+    let maxYear = new Date().getFullYear();
+    let minQuarter = 1;
+    let maxQuarter = 4;
     trades.forEach((trade) => {
-      const date = new Date(trade.entry_date)
-      const year = date.getFullYear()
-      const quarter = Math.floor(date.getMonth() / 3) + 1
-      const label = `Q${quarter} '${String(year).slice(-2)}`
-      map[label] = (map[label] || 0) + (trade.profit_loss || 0)
-    })
-    return Object.entries(map).map(([label, value]) => ({ label, value }))
+      const date = new Date(trade.entry_date);
+      const year = date.getFullYear();
+      const quarter = Math.floor(date.getMonth() / 3) + 1;
+      minYear = Math.min(minYear, year);
+      maxYear = Math.max(maxYear, year);
+      if (year === minYear) minQuarter = Math.min(minQuarter, quarter);
+      if (year === maxYear) maxQuarter = Math.max(maxQuarter, quarter);
+      const label = `Q${quarter} '${String(year).slice(-2)}`;
+      map[label] = (map[label] || 0) + (trade.profit_loss || 0);
+    });
+    // Fill missing quarters
+    const result = [];
+    for (let y = minYear; y <= maxYear; y++) {
+      for (let q = 1; q <= 4; q++) {
+        if ((y === minYear && q < minQuarter) || (y === maxYear && q > maxQuarter)) continue;
+        const label = `Q${q} '${String(y).slice(-2)}`;
+        result.push({ label, value: map[label] || 0 });
+      }
+    }
+    return result;
   }
 
   function groupTradesByYear(trades: Trade[]) {
-    const map: Record<string, number> = {}
+    const map: Record<string, number> = {};
+    let minYear = new Date().getFullYear();
+    let maxYear = new Date().getFullYear();
     trades.forEach((trade) => {
-      const date = new Date(trade.entry_date)
-      const label = date.getFullYear().toString()
-      map[label] = (map[label] || 0) + (trade.profit_loss || 0)
-    })
-    return Object.entries(map).map(([label, value]) => ({ label, value }))
+      const date = new Date(trade.entry_date);
+      const year = date.getFullYear();
+      minYear = Math.min(minYear, year);
+      maxYear = Math.max(maxYear, year);
+      map[year] = (map[year] || 0) + (trade.profit_loss || 0);
+    });
+    const result = [];
+    for (let y = minYear; y <= maxYear; y++) {
+      result.push({ label: y.toString(), value: map[y] || 0 });
+    }
+    return result;
   }
 
   function getTradePerformanceData(trades: Trade[], timeframe: string) {
+    let data: { label: string, value: number }[] = [];
     if (timeframe === "7days") {
-      // Get last 7 days
       const last7 = groupTradesByDay(trades)
-      // Ensure 7 bars (fill missing days with 0)
       const days = []
       for (let i = 6; i >= 0; i--) {
         const d = new Date()
@@ -98,17 +122,16 @@ export default function AnalyticsPage() {
         const found = last7.find((item) => item.label === label)
         days.push({ label, value: found ? found.value : 0 })
       }
-      return days
+      data = days
     } else if (timeframe === "30days") {
-      // Group by month (should be 1 or 2 months)
-      return groupTradesByMonth(trades)
+      data = groupTradesByMonth(trades, 6)
     } else if (timeframe === "90days") {
-      // Group by quarter
-      return groupTradesByQuarter(trades)
+      data = groupTradesByQuarter(trades)
     } else {
-      // year or all
-      return groupTradesByYear(trades)
+      data = groupTradesByYear(trades)
     }
+    // Map to absolute value for bar height, but keep original for coloring
+    return data.map(item => ({ ...item, absValue: Math.abs(item.value), isProfit: item.value >= 0 }));
   }
 
   function getWinLossData(trades: Trade[]) {
@@ -197,6 +220,8 @@ export default function AnalyticsPage() {
         const performance = Object.entries(instrumentMap).map(([type, value]) => ({
           name: type,
           PnL: parseFloat(value.PnL.toFixed(2)),
+          absPnL: Math.abs(parseFloat(value.PnL.toFixed(2))),
+          isProfit: value.PnL >= 0,
           winRate: value.count > 0 ? (value.win / value.count) * 100 : 0
         }))
 
@@ -208,6 +233,8 @@ export default function AnalyticsPage() {
         const strategyPerformance = Object.entries(strategyMap).map(([type, value]) => ({
           name: type,
           PnL: parseFloat(value.PnL.toFixed(2)),
+          absPnL: Math.abs(parseFloat(value.PnL.toFixed(2))),
+          isProfit: value.PnL >= 0,
           winRate: value.count > 0 ? (value.win / value.count) * 100 : 0
         }))
 
@@ -317,10 +344,10 @@ export default function AnalyticsPage() {
               <SelectValue placeholder="Select timeframe" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7days">Last 7 Days</SelectItem>
-              <SelectItem value="30days">Last 30 Days</SelectItem>
-              <SelectItem value="90days">Last 90 Days</SelectItem>
-              <SelectItem value="year">Last Year</SelectItem>
+              <SelectItem value="7days">Weekly</SelectItem>
+              <SelectItem value="30days">Monthly</SelectItem>
+              <SelectItem value="90days">Quarterly</SelectItem>
+              <SelectItem value="year">Yearly</SelectItem>
               <SelectItem value="all">All Time</SelectItem>
             </SelectContent>
           </Select>
@@ -454,10 +481,13 @@ export default function AnalyticsPage() {
                             <ReBarChart data={tradePerformanceData}>
                               <XAxis dataKey="label" tick={{ fontSize: 13 }} />
                               <YAxis tick={{ fontSize: 13 }} />
-                              <ReTooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
-                              <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="#8884d8">
+                              <ReTooltip formatter={(value: number, name: string, props: any) => {
+                                const entry = tradePerformanceData[props.dataIndex];
+                                return `${entry && !entry.isProfit ? '-' : ''}$${value.toFixed(2)}`;
+                              }} />
+                              <Bar dataKey="absValue" barSize={24} radius={[4, 4, 0, 0]} fill="#8884d8">
                                 {tradePerformanceData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.value >= 0 ? "#22c55e" : "#ef4444"} />
+                                  <Cell key={`cell-${index}`} fill={entry.isProfit ? "#22c55e" : "#ef4444"} />
                                 ))}
                               </Bar>
                             </ReBarChart>
@@ -586,12 +616,14 @@ export default function AnalyticsPage() {
                             />
                             <YAxis tick={{ fontSize: 13 }} />
                             <ReTooltip
-                              formatter={(value: number) =>
-                                `${value >= 0 ? "+" : "-"}$${Math.abs(value).toFixed(2)}`
-                              }
+                              formatter={(value, name, props) => {
+                                const entry = instrumentPerformance[props.dataIndex];
+                                return `${entry && !entry.isProfit ? '-' : ''}$${value.toFixed(2)}`;
+                              }}
                             />
                             <Bar
-                              dataKey="PnL"
+                              dataKey="absPnL"
+                              barSize={24}
                               isAnimationActive={true}
                               shape={false}
                               radius={[4, 4, 0, 0]}
@@ -599,7 +631,7 @@ export default function AnalyticsPage() {
                               {instrumentPerformance.map((entry, index) => (
                                 <Cell
                                   key={`cell-${index}`}
-                                  fill={entry.PnL >= 0 ? "#22c55e" /* green */ : "#ef4444" /* red */}
+                                  fill={entry.isProfit ? "#22c55e" : "#ef4444"}
                                 />
                               ))}
                             </Bar>
@@ -690,16 +722,16 @@ export default function AnalyticsPage() {
                               interval={0}
                               tick={{ fontSize: 13 }}
                             />
-                            <YAxis
-                              tick={{ fontSize: 13 }}
-                            />
+                            <YAxis tick={{ fontSize: 13 }} />
                             <ReTooltip
-                              formatter={(value: number) =>
-                                `${value >= 0 ? "+" : "-"}$${Math.abs(value).toFixed(2)}`
-                              }
+                              formatter={(value, name, props) => {
+                                const entry = strategyPerformance[props.dataIndex];
+                                return `${entry && !entry.isProfit ? '-' : ''}$${value.toFixed(2)}`;
+                              }}
                             />
                             <Bar
-                              dataKey="PnL"
+                              dataKey="absPnL"
+                              barSize={24}
                               isAnimationActive={true}
                               shape={false}
                               radius={[4, 4, 0, 0]}
@@ -707,7 +739,7 @@ export default function AnalyticsPage() {
                               {strategyPerformance.map((entry, index) => (
                                 <Cell
                                   key={`cell-${index}`}
-                                  fill={entry.PnL >= 0 ? "#22c55e" /* green */ : "#ef4444" /* red */}
+                                  fill={entry.isProfit ? "#22c55e" : "#ef4444"}
                                 />
                               ))}
                             </Bar>
