@@ -23,6 +23,8 @@ export default function AnalyticsPage() {
     avgLoss: 0,
     profitFactor: 0,
     netProfit: 0,
+    targetHitRate: 0,
+    totalFees: 0,
   })
   const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#00C49F", "#FFBB28", "#FF4444", "#4DD0E1", "#A1887F", "#BA68C8", "#FFD54F", "#81C784"];
 
@@ -248,7 +250,7 @@ export default function AnalyticsPage() {
 
 
         calculateMetrics(data as Trade[])
-        setEquityCurve(getEquityCurveData(data as Trade[]))
+        setEquityCurve(getEquityCurveData(data as Trade[], timeframe))
         setTradePerformanceData(getTradePerformanceData(data as Trade[], timeframe))
         setWinLossData(getWinLossData(data as Trade[]))
       } catch (error: any) {
@@ -276,6 +278,8 @@ export default function AnalyticsPage() {
         avgLoss: 0,
         profitFactor: 0,
         netProfit: 0,
+        targetHitRate: 0,
+        totalFees: 0,
       })
       return
     }
@@ -295,6 +299,26 @@ export default function AnalyticsPage() {
 
     const netProfit = totalGain - totalLoss
 
+    // Calculate Target Hit Rate and Total Fees/Commissions
+    let tradesWithTarget = 0;
+    let targetHits = 0;
+    let totalFees = 0;
+
+    trades.forEach(trade => {
+      totalFees += (trade.fees || 0);
+
+      if (trade.target !== undefined && trade.target !== null && trade.exit_price !== undefined && trade.exit_price !== null) {
+        tradesWithTarget++;
+        if (trade.trade_type === 'long' && trade.exit_price >= trade.target) {
+          targetHits++;
+        } else if (trade.trade_type === 'short' && trade.exit_price <= trade.target) {
+          targetHits++;
+        }
+      }
+    });
+
+    const targetHitRate = tradesWithTarget > 0 ? (targetHits / tradesWithTarget) * 100 : 0;
+
     setMetrics({
       totalTrades,
       winRate,
@@ -302,26 +326,113 @@ export default function AnalyticsPage() {
       avgLoss,
       profitFactor,
       netProfit,
+      targetHitRate,
+      totalFees,
     })
   }
 
-  const getEquityCurveData = (trades: Trade[]) => {
+  const getEquityCurveData = (trades: Trade[], timeframe: string) => {
     // Sort trades by date ascending
-    const sortedTrades = [...trades].sort((a, b) => new Date(a.entry_date).getTime() - new Date(b.entry_date).getTime())
-
-    let cumulative = 0
-    const curve = sortedTrades.map((trade) => {
-      cumulative += trade.profit_loss || 0
-      return {
-        date: new Date(trade.entry_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }),
-        value: cumulative,
+    const sortedTrades = [...trades].sort((a, b) => new Date(a.entry_date).getTime() - new Date(b.entry_date).getTime());
+    let grouped: { label: string, trades: Trade[] }[] = [];
+    if (timeframe === "7days") {
+      // Group by day
+      const map: Record<string, Trade[]> = {};
+      sortedTrades.forEach(trade => {
+        const label = new Date(trade.entry_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+        if (!map[label]) map[label] = [];
+        map[label].push(trade);
+      });
+      // Ensure 7 days
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const label = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+        days.push({ label, trades: map[label] || [] });
       }
-    })
-
-    return curve
+      grouped = days;
+    } else if (timeframe === "30days") {
+      // Group by month (last 6 months)
+      const map: Record<string, Trade[]> = {};
+      sortedTrades.forEach(trade => {
+        const label = new Date(trade.entry_date).toLocaleString("en-GB", { month: "short", year: "2-digit" });
+        if (!map[label]) map[label] = [];
+        map[label].push(trade);
+      });
+      const now = new Date();
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const label = d.toLocaleString("en-GB", { month: "short", year: "2-digit" });
+        months.push({ label, trades: map[label] || [] });
+      }
+      grouped = months;
+    } else if (timeframe === "90days") {
+      // Group by quarter
+      const map: Record<string, Trade[]> = {};
+      sortedTrades.forEach(trade => {
+        const date = new Date(trade.entry_date);
+        const year = date.getFullYear();
+        const quarter = Math.floor(date.getMonth() / 3) + 1;
+        const label = `Q${quarter} '${String(year).slice(-2)}`;
+        if (!map[label]) map[label] = [];
+        map[label].push(trade);
+      });
+      // Find min/max year/quarter
+      let minYear = new Date().getFullYear();
+      let maxYear = new Date().getFullYear();
+      let minQuarter = 1;
+      let maxQuarter = 4;
+      sortedTrades.forEach(trade => {
+        const date = new Date(trade.entry_date);
+        const year = date.getFullYear();
+        const quarter = Math.floor(date.getMonth() / 3) + 1;
+        minYear = Math.min(minYear, year);
+        maxYear = Math.max(maxYear, year);
+        if (year === minYear) minQuarter = Math.min(minQuarter, quarter);
+        if (year === maxYear) maxQuarter = Math.max(maxQuarter, quarter);
+      });
+      const quarters = [];
+      for (let y = minYear; y <= maxYear; y++) {
+        for (let q = 1; q <= 4; q++) {
+          if ((y === minYear && q < minQuarter) || (y === maxYear && q > maxQuarter)) continue;
+          const label = `Q${q} '${String(y).slice(-2)}`;
+          quarters.push({ label, trades: map[label] || [] });
+        }
+      }
+      grouped = quarters;
+    } else {
+      // Group by year
+      const map: Record<string, Trade[]> = {};
+      sortedTrades.forEach(trade => {
+        const date = new Date(trade.entry_date);
+        const year = date.getFullYear().toString();
+        if (!map[year]) map[year] = [];
+        map[year].push(trade);
+      });
+      let minYear = new Date().getFullYear();
+      let maxYear = new Date().getFullYear();
+      sortedTrades.forEach(trade => {
+        const date = new Date(trade.entry_date);
+        const year = date.getFullYear();
+        minYear = Math.min(minYear, year);
+        maxYear = Math.max(maxYear, year);
+      });
+      const years = [];
+      for (let y = minYear; y <= maxYear; y++) {
+        years.push({ label: y.toString(), trades: map[y.toString()] || [] });
+      }
+      grouped = years;
+    }
+    // Now, for each group, calculate cumulative value up to that group
+    let cumulative = 0;
+    return grouped.map(group => {
+      const groupSum = group.trades.reduce((sum, trade) => sum + (trade.profit_loss || 0), 0);
+      cumulative += groupSum;
+      return { date: group.label, value: cumulative };
+    });
   }
-
-
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -344,10 +455,10 @@ export default function AnalyticsPage() {
               <SelectValue placeholder="Select timeframe" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7days">Weekly</SelectItem>
-              <SelectItem value="30days">Monthly</SelectItem>
-              <SelectItem value="90days">Quarterly</SelectItem>
-              <SelectItem value="year">Yearly</SelectItem>
+              <SelectItem value="7days">Last 7 days</SelectItem>
+              <SelectItem value="30days">Last 30 days</SelectItem>
+              <SelectItem value="90days">Last 90 days</SelectItem>
+              <SelectItem value="year">Last year</SelectItem>
               <SelectItem value="all">All Time</SelectItem>
             </SelectContent>
           </Select>
@@ -368,7 +479,7 @@ export default function AnalyticsPage() {
           </Card>
         ) : (
           <>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Trades</CardTitle>
@@ -389,6 +500,22 @@ export default function AnalyticsPage() {
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Target Hit Rate</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{formatPercentage(metrics.targetHitRate)}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Profit Factor</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{metrics.profitFactor.toFixed(2)}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Net Profit/Loss</CardTitle>
                   <ReLineChart className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
@@ -401,18 +528,6 @@ export default function AnalyticsPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Average Gain</CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
-                  >
-                    <path d="m5 12 5 5 9-9" />
-                  </svg>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-500">{formatCurrency(metrics.avgGain)}</div>
@@ -421,18 +536,6 @@ export default function AnalyticsPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Average Loss</CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
-                  >
-                    <path d="m6 9 6 6 6-6" />
-                  </svg>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-red-500">{formatCurrency(metrics.avgLoss)}</div>
@@ -440,22 +543,10 @@ export default function AnalyticsPage() {
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Profit Factor</CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
-                  >
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H7" />
-                  </svg>
+                  <CardTitle className="text-sm font-medium">Total Fees/Commissions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{metrics.profitFactor.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">{formatCurrency(metrics.totalFees)}</div>
                 </CardContent>
               </Card>
             </div>
@@ -482,8 +573,8 @@ export default function AnalyticsPage() {
                               <XAxis dataKey="label" tick={{ fontSize: 13 }} />
                               <YAxis tick={{ fontSize: 13 }} />
                               <ReTooltip formatter={(value: number, name: string, props: any) => {
-                                const entry = tradePerformanceData[props.dataIndex];
-                                return `${entry && !entry.isProfit ? '-' : ''}$${value.toFixed(2)}`;
+                                const entry = props.payload && props.payload.length > 0 ? props.payload[0].payload : null;
+                                return `${entry && !entry.isProfit ? '-' : ''}${(value as number).toFixed(2)}`;
                               }} />
                               <Bar dataKey="absValue" barSize={24} radius={[4, 4, 0, 0]} fill="#8884d8">
                                 {tradePerformanceData.map((entry, index) => (
@@ -616,9 +707,9 @@ export default function AnalyticsPage() {
                             />
                             <YAxis tick={{ fontSize: 13 }} />
                             <ReTooltip
-                              formatter={(value, name, props) => {
-                                const entry = instrumentPerformance[props.dataIndex];
-                                return `${entry && !entry.isProfit ? '-' : ''}$${value.toFixed(2)}`;
+                              formatter={(value: number, name: string, props: any) => {
+                                const entry = props.payload && props.payload.length > 0 ? props.payload[0].payload : null;
+                                return `${entry && !entry.isProfit ? '-' : ''}${(value as number).toFixed(2)}`;
                               }}
                             />
                             <Bar
@@ -724,9 +815,9 @@ export default function AnalyticsPage() {
                             />
                             <YAxis tick={{ fontSize: 13 }} />
                             <ReTooltip
-                              formatter={(value, name, props) => {
-                                const entry = strategyPerformance[props.dataIndex];
-                                return `${entry && !entry.isProfit ? '-' : ''}$${value.toFixed(2)}`;
+                              formatter={(value: number, name: string, props: any) => {
+                                const entry = props.payload && props.payload.length > 0 ? props.payload[0].payload : null;
+                                return `${entry && !entry.isProfit ? '-' : ''}${(value as number).toFixed(2)}`;
                               }}
                             />
                             <Bar

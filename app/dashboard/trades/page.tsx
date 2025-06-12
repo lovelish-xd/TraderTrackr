@@ -222,11 +222,11 @@ export default function TradesPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Trades</h1>
           <div className="flex gap-2">
-            <Button onClick={exportToCsv} className="bg-[#185E61]">
+            <Button onClick={exportToCsv} className="bg-[#185E61] hover:bg-[#2A7174]">
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
-            <Button asChild className="bg-[#185E61]">
+            <Button asChild className="bg-[#185E61] hover:bg-[#2A7174]">
               <Link href="/dashboard/trades/new">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Trade
