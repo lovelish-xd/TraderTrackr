@@ -7,7 +7,7 @@ export default function Home() {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 w-full border-b border-[#185E61]/10 backdrop-blur supports-[backdrop-filter]:bg-[#FBFBFB]">
         <div className="container flex h-20 items-center justify-between px-4 md:px-6">
-          <div className="flex items-center gap-2 font-bold text-[#185E61]">
+            <div className="flex items-center gap-2 font-bold text-[#185E61]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -16,12 +16,12 @@ export default function Home() {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="h-12 w-12"
+              className="h-8 w-8 sm:h-10 sm:w-10"
             >
               <path d="M5 16V9h14V2H5l14 14h-7m-7 0 7 7v-7m-7 0h7" />
             </svg>
-            <span className="text-2xl">TraderTrackr</span>
-          </div>
+            <span className="text-lg sm:text-2xl font-bold">TraderTrackr</span>
+            </div>
           <div className="flex items-center gap-2">
             <Link href="/login">
               <Button variant="ghost" className="text-[#185E61] hover:bg-[#185E61]/10">Login</Button>
