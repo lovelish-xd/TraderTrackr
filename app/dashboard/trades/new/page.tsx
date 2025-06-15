@@ -219,9 +219,6 @@ export default function NewTradePage() {
       <div className="mx-auto max-w-4xl">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Add New Trade</h1>
-          <Button variant="outline" onClick={() => router.back()}>
-            Cancel
-          </Button>
         </div>
         <form onSubmit={handleSubmit}>
           <Card className="mb-6">
@@ -586,7 +583,7 @@ export default function NewTradePage() {
             <Button variant="outline" type="button" onClick={() => router.back()}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading} className="bg-[#186E61]">
+            <Button type="submit" disabled={isLoading} className="bg-[#186E61] text-white hover:bg-[#2A7174] ">
               {isLoading ? "Saving..." : "Save Trade"}
             </Button>
           </CardFooter>

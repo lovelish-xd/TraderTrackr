@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase"
 import type { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
+import { ModeToggle } from "@/components/mode-toggle"
 import {
   BarChart3,
   Calendar,
@@ -297,6 +298,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="ml-auto flex items-center gap-x-4 lg:gap-x-6">
+              <ModeToggle />
               <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-muted" />
               <div className="flex items-center gap-2">
                 <div className="hidden text-sm font-medium lg:block">{user.email}</div>

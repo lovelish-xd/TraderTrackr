@@ -20,14 +20,14 @@ export default function Home() {
             >
               <path d="M5 16V9h14V2H5l14 14h-7m-7 0 7 7v-7m-7 0h7" />
             </svg>
-            <span className="text-lg sm:text-2xl font-bold">TraderTrackr</span>
+            <span className="text-lg sm:text-xl font-bold">TraderTrackr</span>
             </div>
           <div className="flex items-center gap-2">
             <Link href="/login">
-              <Button variant="ghost" className="text-[#185E61] hover:bg-[#185E61]/10">Login</Button>
+              <Button variant="ghost" className="text-[#185E61] hover:bg-[#185E61] hover:text-white border-2 border-[#185E61]">Login</Button>
             </Link>
             <Link href="/signup">
-              <Button className="bg-[#185E61] hover:bg-[#185E61]/90 text-[#FBFBFB]">Sign Up</Button>
+              <Button className="bg-[#185E61] hover:bg-[#FBFBFB] hover:text-[#185E61] hover:border-2 hover:border-[#185E61] text-[#FBFBFB]">Sign Up</Button>
             </Link>
           </div>
         </div>
