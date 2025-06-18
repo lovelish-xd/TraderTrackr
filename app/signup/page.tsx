@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/components/ui/use-toast"
 
 export default function SignupPage() {
@@ -59,50 +60,52 @@ export default function SignupPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+  e.preventDefault()
+  setIsLoading(true)
 
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match.",
-        variant: "destructive",
-      })
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            country: formData.country,
-          },
-        },
-      })
-
-      if (error) throw error
-
-      toast({
-        title: "Account created!",
-        description: "Please check your email to verify your account.",
-      })
-
-      router.push("/login")
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
+  if (formData.password !== formData.confirmPassword) {
+    toast({
+      title: "Error",
+      description: "Passwords do not match.",
+      variant: "destructive",
+    })
+    setIsLoading(false)
+    return
   }
+
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        data: {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          country: formData.country,
+        },
+        emailRedirectTo: `${window.location.origin}/login?confirmed=true`,
+      },
+    })
+
+    if (error) throw error
+
+    toast({
+      title: "Account created!",
+      description: "Please check your email to verify your account.",
+    })
+
+    router.push("/login")
+  } catch (error: any) {
+    toast({
+      title: "Error",
+      description: error.message || "Something went wrong. Please try again.",
+      variant: "destructive",
+    })
+  } finally {
+    setIsLoading(false)
+  }
+}
+
 
   const handleGoogleSignup = async () => {
     setIsLoading(true)

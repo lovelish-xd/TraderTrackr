@@ -68,8 +68,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         title: "Signed out successfully",
         description: "You have been signed out of your account.",
       })
-      window.location.href = "/"
-    } catch (error) {
+         } catch (error) {
       console.error("Error signing out:", error)
       toast({
         title: "Error",
@@ -90,7 +89,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const userNavigation = [
     { name: "Your Profile", href: "/dashboard/profile", icon: UserIcon },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
-    { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
   ]
 
   if (isLoading) {
@@ -297,11 +295,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </Button>
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-            <div className="ml-auto flex items-center gap-x-4 lg:gap-x-6">
+            <div className="ml-auto flex items-center gap-x-4 lg:gap-x-2">
               <ModeToggle />
               <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-muted" />
               <div className="flex items-center gap-2">
-                <div className="hidden text-sm font-medium lg:block">{user.email}</div>
+                <div>{user.user_metadata?.first_name +" "+ user.user_metadata?.last_name  || user.email}</div>
                 <Button variant="ghost" size="icon" className="rounded-full" asChild>
                   <Link href="/dashboard/profile">
                     <span className="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full">

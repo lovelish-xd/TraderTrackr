@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
@@ -11,15 +11,30 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
+import { useSearchParams } from "next/navigation"
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   })
+
+  useEffect(() => {
+    const confirmed = searchParams.get("confirmed")
+    console.log("[DEBUG] confirmed param:", confirmed)
+    if (confirmed === "true") {
+      setTimeout(() => {
+        toast({
+          title: "Email verified!",
+          description: "You can now log in.",
+        })
+      }, 300)
+    }
+  }, [searchParams.toString()])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
