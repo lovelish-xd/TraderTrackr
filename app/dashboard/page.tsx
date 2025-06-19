@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowUpIcon, BarChart3, LineChart, TrendingUp } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import type { Trade } from "@/lib/supabase"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 import { PieChart as RePieChart, Pie, Cell, Tooltip as ReTooltip, BarChart as ReBarChart, XAxis, YAxis, Bar, ResponsiveContainer, LineChart as ReLineChart, Line, CartesianGrid } from "recharts"
 
 export default function DashboardPage() {
@@ -36,7 +38,37 @@ export default function DashboardPage() {
         const { data: userData, error: userError } = await supabase.auth.getUser()
         if (userError) throw userError
         const userId = userData.user?.id
-        if (!userId) throw new Error("User not authenticated")
+        if (!userId) {
+          <div className="flex h-screen flex-col items-center justify-center bg-[#185e61]">
+            <div className='flex flex-col items-center justify-center gap-4 border border-1 bg-white p-6 rounded-lg shadow-md'>
+            <Link href="/" className="flex items-center gap-2 font-bold text-[#185E61]">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-6 w-6"
+              >
+                <path d="M5 16V9h14V2H5l14 14h-7m-7 0 7 7v-7m-7 0h7" />
+              </svg>
+              <span>TraderTrackr</span>
+            </Link>
+                <h1 className="text-2xl font-bold">You are not logged in</h1>
+                <p className="text-muted-foreground">Please log in to access the dashboard</p>
+                <div className="flex gap-2">
+                    <Button asChild className='bg-[#185E61] text-white hover:bg-[#0f4c4e]'>
+                        <Link href="/login">Login</Link>
+                    </Button>
+                    <Button asChild variant="outline">
+                        <Link href="/signup">Sign Up</Link>
+                    </Button>
+                </div>
+            </div>
+        </div>
+        }
         // Fetch all trades for the user
         let query = supabase.from("trades").select("*").eq("user_id", userId).order("entry_date", { ascending: false })
         const { data, error } = await query

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -21,12 +21,9 @@ export default function ProfilePage() {
     first_name: "",
     last_name: "",
     email: "",
+    country: "",
     joined: "",
-    avatar_url: "",
   })
-  const [avatarPreview, setAvatarPreview] = useState<string>("")
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const getProfile = async () => {
@@ -37,7 +34,7 @@ export default function ProfilePage() {
         setUser(userData.user)
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("first_name,last_name,avatar_url,created_at")
+          .select("first_name,last_name,created_at")
           .eq("id", userData.user.id)
           .single()
         if (profileError && profileError.code !== "PGRST116") throw profileError
@@ -45,10 +42,9 @@ export default function ProfilePage() {
           first_name: profileData?.first_name || userData.user.user_metadata?.first_name || "",
           last_name: profileData?.last_name || userData.user.user_metadata?.last_name || "",
           email: userData.user.email || "",
+          country: userData.user.user_metadata?.country || "Not specified",
           joined: profileData?.created_at || userData.user.created_at || "",
-          avatar_url: profileData?.avatar_url || "",
         })
-        setAvatarPreview(profileData?.avatar_url || "")
       } catch (error: any) {
         toast({
           title: "Error",
@@ -69,14 +65,6 @@ export default function ProfilePage() {
     })
   }
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setAvatarFile(file)
-      setAvatarPreview(URL.createObjectURL(file))
-    }
-  }
-
   const handleEditToggle = () => {
     setIsEditing((prev) => !prev)
   }
@@ -86,19 +74,10 @@ export default function ProfilePage() {
     setIsSaving(true)
     try {
       if (!user) throw new Error("User not authenticated")
-      let avatar_url = profile.avatar_url
-      if (avatarFile) {
-        const { data, error } = await supabase.storage
-          .from("avatars")
-          .upload(`${user.id}/${avatarFile.name}`, avatarFile, { upsert: true })
-        if (error) throw error
-        avatar_url = data?.path ? supabase.storage.from("avatars").getPublicUrl(data.path).data.publicUrl : avatar_url
-      }
       const { error: profileError } = await supabase.from("profiles").upsert({
         id: user.id,
         first_name: profile.first_name,
         last_name: profile.last_name,
-        avatar_url,
         updated_at: new Date().toISOString(),
       })
       if (profileError) throw profileError
@@ -108,7 +87,6 @@ export default function ProfilePage() {
           last_name: profile.last_name,
         },
       })
-      setProfile((prev) => ({ ...prev, avatar_url }))
       setIsEditing(false)
       toast({
         title: "Profile updated",
@@ -149,41 +127,7 @@ export default function ProfilePage() {
               <CardDescription>Edit your basic information</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-                <div className="flex flex-col items-center">
-                  <div className="relative h-20 w-20 rounded-full bg-muted shadow">
-                    {avatarPreview ? (
-                      <img
-                        src={avatarPreview}
-                        alt="Profile Preview"
-                        className="h-20 w-20 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-200 text-3xl text-gray-400">
-                        {profile.first_name?.[0] || "?"}
-                      </div>
-                    )}
-                    {isEditing && (
-                      <button
-                        type="button"
-                        className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-white shadow hover:bg-primary/90"
-                        onClick={() => fileInputRef.current?.click()}
-                        tabIndex={-1}
-                      >
-                        <span className="sr-only">Upload</span>
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12" /></svg>
-                      </button>
-                    )}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleAvatarChange}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                </div>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                 <div className="flex-1 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <Label htmlFor="first_name">First Name</Label>
@@ -207,6 +151,10 @@ export default function ProfilePage() {
                       autoComplete="family-name"
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="country">Country</Label>
+                    <Input id="country" name="country" value={profile.country} disabled className="bg-gray-100 dark:bg-gray-800" />
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -221,7 +169,7 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
-              <Input id="email" name="email" value={profile.email} disabled className="bg-gray-100" />
+              <Input id="email" name="email" value={profile.email} disabled className="bg-gray-100 dark:bg-gray-800" />
             </CardContent>
           </Card>
 
@@ -240,13 +188,18 @@ export default function ProfilePage() {
           {/* Edit/Save Button */}
           <div className="flex justify-end gap-2">
             {!isEditing ? (
-              <Button type="button" onClick={handleEditToggle} className="rounded-full px-6">
+              <Button type="button" onClick={handleEditToggle} className="px-6">
                 Edit
               </Button>
             ) : (
-              <Button type="submit" disabled={isSaving} className="rounded-full px-6">
-                {isSaving ? "Saving..." : "Save Changes"}
-              </Button>
+              <>
+                <Button type="button" variant="ghost" onClick={handleEditToggle} className="px-6">
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSaving} className="px-6">
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
+              </>
             )}
           </div>
         </form>

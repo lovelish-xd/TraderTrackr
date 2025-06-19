@@ -13,7 +13,6 @@ import { ModeToggle } from "@/components/mode-toggle"
 import {
   BarChart3,
   Calendar,
-  CreditCard,
   Home,
   LineChart,
   LogOut,
@@ -65,10 +64,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     try {
       await supabase.auth.signOut()
       toast({
-        title: "Signed out successfully",
-        description: "You have been signed out of your account.",
-      })
-         } catch (error) {
+          title: "Signed out successfully",
+          description: "You have been signed out of your account.",
+        })
+      setTimeout(() => {
+        window.location.href = "/"
+      }, 2000)
+    } catch (error) {
       console.error("Error signing out:", error)
       toast({
         title: "Error",
@@ -101,16 +103,33 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (!user) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4">
-        <h1 className="text-2xl font-bold">You are not logged in</h1>
-        <p className="text-muted-foreground">Please log in to access the dashboard</p>
-        <div className="flex gap-2">
-          <Button asChild>
-            <Link href="/login">Login</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/signup">Sign Up</Link>
-          </Button>
+      <div className="flex h-screen flex-col items-center justify-center bg-[#185e61]">
+        <div className='flex flex-col items-center justify-center gap-4 border border-1 bg-white p-6 rounded-lg shadow-md'>
+          <Link href="/" className="flex items-center gap-2 font-bold text-[#185E61]">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-6 w-6"
+            >
+              <path d="M5 16V9h14V2H5l14 14h-7m-7 0 7 7v-7m-7 0h7" />
+            </svg>
+            <span>TraderTrackr</span>
+          </Link>
+          <h1 className="text-2xl font-bold">You are not logged in</h1>
+          <p className="text-muted-foreground">Please log in to access the dashboard</p>
+          <div className="flex gap-2">
+            <Button asChild className='bg-[#185E61] text-white hover:bg-[#0f4c4e]'>
+              <Link href="/login">Login</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/signup">Sign Up</Link>
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -150,13 +169,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`-mx-3 flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium ${
-                        (item.href === "/dashboard"
+                      className={`-mx-3 flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium ${(item.href === "/dashboard"
                           ? pathname === item.href
                           : pathname.startsWith(item.href))
                           ? "bg-[#185E61] text-white"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
+                        }`}
                       onClick={() => setIsMobileNavOpen(false)}
                     >
                       <item.icon className="h-6 w-6 shrink-0" />
@@ -167,17 +185,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <div className="space-y-2 py-6">
                   {userNavigation.map((item) => (
                     <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`-mx-3 flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium ${
-                      pathname === item.href
-                        ? "bg-[#185E61] text-white"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                    onClick={() => setIsMobileNavOpen(false)}
-                  >
-                    <item.icon className="h-6 w-6 shrink-0" />
-                    {item.name}
+                      key={item.name}
+                      href={item.href}
+                      className={`-mx-3 flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium ${pathname === item.href
+                          ? "bg-[#185E61] text-white"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                      onClick={() => setIsMobileNavOpen(false)}
+                    >
+                      <item.icon className="h-6 w-6 shrink-0" />
+                      {item.name}
                     </Link>
                   ))}
                 </div>
@@ -225,18 +242,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className={`group flex gap-x-3 rounded-md p-2 text-sm font-medium ${
-                          pathname === item.href
+                        className={`group flex gap-x-3 rounded-md p-2 text-sm font-medium ${pathname === item.href
                             ? "bg-[#185E61] text-white"
                             : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                        }`}
+                          }`}
                       >
                         <item.icon
-                          className={`h-6 w-6 shrink-0 ${
-                            pathname === item.href
+                          className={`h-6 w-6 shrink-0 ${pathname === item.href
                               ? "text-white"
                               : "text-muted-foreground group-hover:text-foreground"
-                          }`}
+                            }`}
                         />
                         {item.name}
                       </Link>
@@ -251,18 +266,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className={`group flex gap-x-3 rounded-md p-2 text-sm font-medium ${
-                          pathname === item.href
+                        className={`group flex gap-x-3 rounded-md p-2 text-sm font-medium ${pathname === item.href
                             ? "bg-[#185E61] text-white"
                             : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                        }`}
+                          }`}
                       >
                         <item.icon
-                          className={`h-6 w-6 shrink-0 ${
-                            pathname === item.href
+                          className={`h-6 w-6 shrink-0 ${pathname === item.href
                               ? "text-white"
                               : "text-muted-foreground group-hover:text-foreground"
-                          }`}
+                            }`}
                         />
                         {item.name}
                       </Link>
@@ -299,7 +312,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <ModeToggle />
               <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-muted" />
               <div className="flex items-center gap-2">
-                <div>{user.user_metadata?.first_name +" "+ user.user_metadata?.last_name  || user.email}</div>
+                <div>{user.user_metadata?.first_name + " " + user.user_metadata?.last_name || user.email}</div>
                 <Button variant="ghost" size="icon" className="rounded-full" asChild>
                   <Link href="/dashboard/profile">
                     <span className="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full">

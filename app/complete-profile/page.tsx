@@ -70,7 +70,6 @@ export default function CompleteProfilePage() {
       id: user?.id,
       email: user?.email,
       ...formData,
-      avatar_url: "", // You can update this later
     })
 
     if (error) {
