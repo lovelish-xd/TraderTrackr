@@ -12,6 +12,6 @@ export async function GET(request: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(new URL("/complete-profile", request.url))
+  // Always redirect to the client-side callback page
+  return NextResponse.redirect(new URL("/auth/callback", request.url))
 }

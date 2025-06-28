@@ -25,7 +25,6 @@ export default function LoginPage() {
 
   useEffect(() => {
     const confirmed = searchParams.get("confirmed")
-    console.log("[DEBUG] confirmed param:", confirmed)
     if (confirmed === "true") {
       setTimeout(() => {
         toast({
