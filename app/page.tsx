@@ -6,9 +6,31 @@ import { useState } from "react"
 import Image from "next/image"
 import { Testimonials } from "@/components/ui/testimonials"
 import { FAQs } from "@/components/ui/faqs"
+import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  
+  // Scroll animation hooks for each section
+  const heroAnimation = useScrollAnimation<HTMLElement>(0.1, '0px 0px -50px 0px')
+  const featuresAnimation = useScrollAnimation<HTMLElement>(0.1, '0px 0px -100px 0px')
+  const testimonialsAnimation = useScrollAnimation<HTMLElement>(0.1, '0px 0px -100px 0px')
+  const bannerAnimation = useScrollAnimation<HTMLElement>(0.1, '0px 0px -100px 0px')
+  const faqsAnimation = useScrollAnimation<HTMLElement>(0.1, '0px 0px -100px 0px')
+  
+  // Hero section individual element animations
+  const heroHeading = useScrollAnimation<HTMLHeadingElement>(0.1, '0px 0px -50px 0px')
+  const heroSubheading = useScrollAnimation<HTMLParagraphElement>(0.1, '0px 0px -50px 0px')
+  const heroButtons = useScrollAnimation<HTMLDivElement>(0.1, '0px 0px -50px 0px')
+  const heroImage = useScrollAnimation<HTMLDivElement>(0.1, '0px 0px -50px 0px')
+  
+  // Individual feature card animations
+  const featureCard1 = useScrollAnimation<HTMLDivElement>(0.1, '0px 0px -50px 0px')
+  const featureCard2 = useScrollAnimation<HTMLDivElement>(0.1, '0px 0px -50px 0px')
+  const featureCard3 = useScrollAnimation<HTMLDivElement>(0.1, '0px 0px -50px 0px')
+  const featureCard4 = useScrollAnimation<HTMLDivElement>(0.1, '0px 0px -50px 0px')
+  const featureCard5 = useScrollAnimation<HTMLDivElement>(0.1, '0px 0px -50px 0px')
+  const featureCard6 = useScrollAnimation<HTMLDivElement>(0.1, '0px 0px -50px 0px')
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -116,20 +138,51 @@ export default function Home() {
 
       <main className="flex-1 relative bg-gradient-to-br from-[#F0FDFD] via-white to-[#185E61]/10">
 
-        
+
         {/* Hero Section */}
-        <section className="relative w-full pt-32 md:pt-32 lg:pt-44 overflow-hidden z-10">
+        <section 
+          ref={heroAnimation.elementRef}
+          className={`relative w-full pt-32 md:pt-32 lg:pt-44 overflow-hidden z-10 transition-all duration-1000 ease-out ${
+            heroAnimation.isVisible 
+              ? 'opacity-100 translate-y-0' 
+              : 'opacity-0 translate-y-8'
+          }`}
+        >
           <div className="relative z-10 container px-4 md:px-6">
             <div className="flex flex-col items-center text-center space-y-8 max-w-4xl mx-auto">
               <div className="space-y-6">
-                <h1 className="text-3xl font-bold tracking-tight sm:text-6xl md:text-7xl lg:text-7xl drop-shadow-sm">
+                <h1 
+                  ref={heroHeading.elementRef}
+                  className={`text-4xl font-bold tracking-tight sm:text-6xl md:text-7xl lg:text-7xl drop-shadow-sm transition-all duration-1000 ease-out ${
+                    heroHeading.isVisible 
+                      ? 'opacity-100 translate-y-0' 
+                      : 'opacity-0 translate-y-8'
+                  }`}
+                  style={{ transitionDelay: '200ms' }}
+                >
                   Track. Reflect. Grow.
                 </h1>
-                <p className="text-lg text-[#7C8494] md:text-xl lg:text-2xl max-w-3xl mx-auto leading-relaxed">
+                <p 
+                  ref={heroSubheading.elementRef}
+                  className={`text-lg text-[#7C8494] md:text-xl lg:text-2xl max-w-3xl mx-auto leading-relaxed transition-all duration-1000 ease-out ${
+                    heroSubheading.isVisible 
+                      ? 'opacity-100 translate-y-0' 
+                      : 'opacity-0 translate-y-8'
+                  }`}
+                  style={{ transitionDelay: '400ms' }}
+                >
                   A professional trading journal to help you track performance, identify patterns, and develop discipline over time.
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <div 
+                ref={heroButtons.elementRef}
+                className={`flex flex-col sm:flex-row gap-4 pt-4 transition-all duration-1000 ease-out ${
+                  heroButtons.isVisible 
+                    ? 'opacity-100 translate-y-0' 
+                    : 'opacity-0 translate-y-8'
+                }`}
+                style={{ transitionDelay: '600ms' }}
+              >
                 <Link href="/signup">
                   <Button
                     size="lg"
@@ -150,7 +203,15 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-            <div className="mt-12 w-full max-w-6xl mx-auto">
+            <div 
+              ref={heroImage.elementRef}
+              className={`mt-12 w-full max-w-6xl mx-auto transition-all duration-1000 ease-out ${
+                heroImage.isVisible 
+                  ? 'opacity-100 translate-y-0' 
+                  : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: '800ms' }}
+            >
               <Image
                 src="/homepage.png"
                 alt="Hero Illustration"
@@ -161,8 +222,18 @@ export default function Home() {
               />
             </div>
           </div>
-        </section>        {/* features section */}
-        <section id="features" className="w-full pt-20 relative z-10">
+        </section>        
+        
+        {/* features section */}
+        <section 
+          id="features" 
+          ref={featuresAnimation.elementRef}
+          className={`w-full pt-20 relative z-10 transition-all duration-1000 ease-out ${
+            featuresAnimation.isVisible 
+              ? 'opacity-100 translate-y-0' 
+              : 'opacity-0 translate-y-8'
+          }`}
+        >
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center text-center space-y-6 max-w-4xl mx-auto">
               <h2 className="text-4xl font-bold tracking-tight sm:text-4xl md:text-3xl lg:text-4xl">
@@ -174,7 +245,15 @@ export default function Home() {
             </div>
           </div>
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 pt-12 md:grid-cols-2 lg:grid-cols-3">
-            <div className="flex flex-col items-center space-y-2 rounded-lg p-4">
+            <div 
+              ref={featureCard1.elementRef}
+              className={`flex flex-col items-center space-y-2 rounded-lg p-4 transition-all duration-700 ease-out ${
+                featureCard1.isVisible 
+                  ? 'opacity-100 translate-y-0' 
+                  : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: '0ms' }}
+            >
               <div className="rounded-full bg-[#185E61]/10 p-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -197,7 +276,15 @@ export default function Home() {
                 Secure login with email or Google authentication and user-specific dashboards
               </p>
             </div>
-            <div className="flex flex-col items-center space-y-2 rounded-lg p-4">
+            <div 
+              ref={featureCard2.elementRef}
+              className={`flex flex-col items-center space-y-2 rounded-lg p-4 transition-all duration-700 ease-out ${
+                featureCard2.isVisible 
+                  ? 'opacity-100 translate-y-0' 
+                  : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: '100ms' }}
+            >
               <div className="rounded-full bg-[#185E61]/10 p-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -224,7 +311,15 @@ export default function Home() {
                 Comprehensive trade entry form with dynamic fields based on instrument type
               </p>
             </div>
-            <div className="flex flex-col items-center space-y-2 rounded-lg p-4">
+            <div 
+              ref={featureCard3.elementRef}
+              className={`flex flex-col items-center space-y-2 rounded-lg p-4 transition-all duration-700 ease-out ${
+                featureCard3.isVisible 
+                  ? 'opacity-100 translate-y-0' 
+                  : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: '200ms' }}
+            >
               <div className="rounded-full bg-[#185E61]/10 p-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -247,7 +342,15 @@ export default function Home() {
                 Track win rate, average gain/loss, drawdown, and risk-reward ratio
               </p>
             </div>
-            <div className="flex flex-col items-center space-y-2 rounded-lg p-4">
+            <div 
+              ref={featureCard4.elementRef}
+              className={`flex flex-col items-center space-y-2 rounded-lg p-4 transition-all duration-700 ease-out ${
+                featureCard4.isVisible 
+                  ? 'opacity-100 translate-y-0' 
+                  : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: '300ms' }}
+            >
               <div className="rounded-full bg-[#185E61]/10 p-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -270,7 +373,15 @@ export default function Home() {
                 Filter trades by instrument, date range, profit/loss, and strategy
               </p>
             </div>
-            <div className="flex flex-col items-center space-y-2 rounded-lg p-4">
+            <div 
+              ref={featureCard5.elementRef}
+              className={`flex flex-col items-center space-y-2 rounded-lg p-4 transition-all duration-700 ease-out ${
+                featureCard5.isVisible 
+                  ? 'opacity-100 translate-y-0' 
+                  : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: '400ms' }}
+            >
               <div className="rounded-full bg-[#185E61]/10 p-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -298,7 +409,15 @@ export default function Home() {
                 Visualize performance with charts, equity curves, and heatmaps
               </p>
             </div>
-            <div className="flex flex-col items-center space-y-2 rounded-lg p-4">
+            <div 
+              ref={featureCard6.elementRef}
+              className={`flex flex-col items-center space-y-2 rounded-lg p-4 transition-all duration-700 ease-out ${
+                featureCard6.isVisible 
+                  ? 'opacity-100 translate-y-0' 
+                  : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: '500ms' }}
+            >
               <div className="rounded-full bg-[#185E61]/10 p-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -323,25 +442,71 @@ export default function Home() {
               </p>
             </div>
           </div>
-        </section>        {/* Testimonials Section */}
-        <section id="testimonials" className="pt-20 relative z-10">
+        </section>
+
+
+        {/* Testimonials Section */}
+        <section 
+          id="testimonials" 
+          ref={testimonialsAnimation.elementRef}
+          className={`pt-20 relative z-10 transition-all duration-1000 ease-out ${
+            testimonialsAnimation.isVisible 
+              ? 'opacity-100 translate-y-0' 
+              : 'opacity-0 translate-y-8'
+          }`}
+        >
           <Testimonials />
-        </section>        {/*banner section */}
-        <section className="pt-20 px-4 md:px-6 relative z-10">
+        </section>
+
+        {/*banner section */}
+        <section 
+          ref={bannerAnimation.elementRef}
+          className={`pt-20 px-4 md:px-6 relative z-10 transition-all duration-1000 ease-out ${
+            bannerAnimation.isVisible 
+              ? 'opacity-100 translate-y-0' 
+              : 'opacity-0 translate-y-8'
+          }`}
+        >
           <div className="container max-w-6xl mx-auto">
-            <div className="rounded-3xl bg-gradient-to-b from-[#0C1F20] to-[#132829] text-center px-8 py-12 md:py-16 shadow-lg">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">
-                Ready to take control of your trading?
-              </h2>
-              <Link href="/signup">
-                <Button className="bg-[#185E61] hover:bg-[#185E61]/90 text-white text-base md:text-lg font-semibold py-3 px-6 rounded-xl shadow-md transition-colors">
-                  Get Started →
-                </Button>
-              </Link>
+            <div className="relative rounded-3xl overflow-hidden text-center px-8 py-12 md:py-16 shadow-lg">
+              {/* Background with patterns */}
+              <div className="absolute inset-0 bg-gradient-to-b from-[#0C1F20] to-[#132829]"></div>
+
+              {/* Dot pattern overlay */}
+              <div
+                className="absolute inset-0 opacity-40"
+                style={{
+                  backgroundImage: `radial-gradient(circle, #185E61 1.5px, transparent 1.5px)`,
+                  backgroundSize: '30px 30px',
+                }}
+              ></div>
+
+              
+
+              <div className="relative z-10">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">
+                  Ready to take control of your trading?
+                </h2>
+                <Link href="/signup">
+                  <Button className="bg-[#185E61] hover:bg-[#185E61]/90 text-white text-base md:text-lg font-semibold py-3 px-6 rounded-xl shadow-md transition-colors">
+                    Get Started →
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
-        </section>        {/* FAQs Section */}
-        <section id="faqs" className="relative z-10">
+        </section>
+
+        {/* FAQs Section */}
+        <section 
+          id="faqs" 
+          ref={faqsAnimation.elementRef}
+          className={`relative z-10 transition-all duration-1000 ease-out ${
+            faqsAnimation.isVisible 
+              ? 'opacity-100 translate-y-0' 
+              : 'opacity-0 translate-y-8'
+          }`}
+        >
           <FAQs />
         </section>      </main>
 
@@ -366,10 +531,10 @@ export default function Home() {
                 </svg>
                 <span className="text-xl font-bold">TraderTrackr</span>
               </div>
-               <p className="text-white/70 text-sm">
-                  &copy; {new Date().getFullYear()} TraderTrackr. All rights reserved.
-                </p>
-            </div>            
+              <p className="text-white/70 text-sm">
+                &copy; {new Date().getFullYear()} TraderTrackr. All rights reserved.
+              </p>
+            </div>
             {/* Product Links */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white">Product</h3>
@@ -385,17 +550,12 @@ export default function Home() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/dashboard" className="text-white/70 hover:text-white transition-colors text-sm">
-                    Dashboard
-                  </Link>
-                </li>
-                <li>
                   <Link href="/analytics" className="text-white/70 hover:text-white transition-colors text-sm">
                     Analytics
                   </Link>
                 </li>
               </ul>
-            </div>            
+            </div>
             {/* Support Links */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white">Support</h3>
@@ -416,7 +576,7 @@ export default function Home() {
                   </Link>
                 </li>
               </ul>
-            </div>            
+            </div>
             {/* Legal Links */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white">Legal</h3>
@@ -432,18 +592,13 @@ export default function Home() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/cookies" className="text-white/70 hover:text-white transition-colors text-sm">
-                    Cookie Policy
-                  </Link>
-                </li>
-                <li>
                   <Link href="/disclaimer" className="text-white/70 hover:text-white transition-colors text-sm">
                     Disclaimer
                   </Link>
                 </li>
               </ul>
             </div>
-          </div>          
+          </div>
         </div>
       </footer>
     </div>
