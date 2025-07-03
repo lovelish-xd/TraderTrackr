@@ -540,13 +540,18 @@ export default function Home() {
               <h3 className="text-lg font-semibold text-white">Product</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="#features" className="text-white/70 hover:text-white transition-colors text-sm">
+                  <Link href="/#features" className="text-white/70 hover:text-white transition-colors text-sm">
                     Features
                   </Link>
                 </li>
                 <li>
-                  <Link href="#testimonials" className="text-white/70 hover:text-white transition-colors text-sm">
-                    Testimonial
+                  <Link href="/#testimonials" className="text-white/70 hover:text-white transition-colors text-sm">
+                    Testimonials
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/dashboard" className="text-white/70 hover:text-white transition-colors text-sm">
+                    Dashboard
                   </Link>
                 </li>
                 <li>
@@ -571,7 +576,7 @@ export default function Home() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="#faqs" className="text-white/70 hover:text-white transition-colors text-sm">
+                  <Link href="/#faqs" className="text-white/70 hover:text-white transition-colors text-sm">
                     FAQs
                   </Link>
                 </li>
@@ -589,6 +594,11 @@ export default function Home() {
                 <li>
                   <Link href="/terms" className="text-white/70 hover:text-white transition-colors text-sm">
                     Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/cookies" className="text-white/70 hover:text-white transition-colors text-sm">
+                    Cookie Policy
                   </Link>
                 </li>
                 <li>
