@@ -86,12 +86,7 @@ export default function NewTradePage() {
   const directions = ["Long", "Short"]
 
   const currencies = [
-    "USD", "INR", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "SEK",
-    "NZD", "MXN", "BRL", "ZAR", "RUB", "IDR", "THB", "VND", "MYR", "PHP",
-    "SGD", "HKD", "TWD", "KRW", "TRY", "ARS", "CLP", "COP", "PEN", "BDT",
-    "BHD", "BND", "KHR", "KWD", "OMR", "QAR", "SAR", "AED", "KZT", "KGS",
-    "TJS", "UZS", "UYU", "ZMW", "ZWL", "BAM", "HRK", "RON", "HUF", "CZK",
-    "DKK", "NOK", "PLN", "BGN", "RSD", "MDL", "MKD", "BYN", "BYR"
+    "USD", "INR"
   ];
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -583,7 +578,7 @@ export default function NewTradePage() {
             <Button variant="outline" type="button" onClick={() => router.back()}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading} className="bg-[#186E61] text-white hover:bg-[#2A7174] ">
+            <Button type="submit" disabled={isLoading} className="bg-[#185E61] text-white hover:bg-[#2A7174] ">
               {isLoading ? "Saving..." : "Save Trade"}
             </Button>
           </CardFooter>

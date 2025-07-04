@@ -169,7 +169,7 @@ export default function TradeDetailsPage({ params }: { params: Promise<{ id: str
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Trades
             </Button>
-            <h1 className="text-3xl font-bold">Trade Details</h1>
+            
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => router.push(`/dashboard/trades/edit/${resolvedParams.id}`)}>

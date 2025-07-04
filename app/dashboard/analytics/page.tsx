@@ -41,10 +41,16 @@ export default function AnalyticsPage() {
   function groupTradesByDay(trades: Trade[]) {
     const map: Record<string, number> = {}
     trades.forEach((trade) => {
-      const date = new Date(trade.entry_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
-      map[date] = (map[date] || 0) + (trade.profit_loss || 0)
+      const date = new Date(trade.entry_date)
+      // Use consistent date formatting: YYYY-MM-DD for comparison, then format for display
+      const dateKey = date.toISOString().split('T')[0] // YYYY-MM-DD format
+      map[dateKey] = (map[dateKey] || 0) + (trade.profit_loss || 0)
     })
-    return Object.entries(map).map(([date, value]) => ({ label: date, value }))
+    return Object.entries(map).map(([dateKey, value]) => {
+      const date = new Date(dateKey)
+      const label = date.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
+      return { label, value, dateKey }
+    })
   }
 
   function groupTradesByMonth(trades: Trade[], monthsBack = 6) {
@@ -120,8 +126,9 @@ export default function AnalyticsPage() {
       for (let i = 6; i >= 0; i--) {
         const d = new Date()
         d.setDate(d.getDate() - i)
+        const dateKey = d.toISOString().split('T')[0] // YYYY-MM-DD format
         const label = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
-        const found = last7.find((item) => item.label === label)
+        const found = last7.find((item) => item.dateKey === dateKey)
         days.push({ label, value: found ? found.value : 0 })
       }
       data = days
@@ -307,11 +314,26 @@ export default function AnalyticsPage() {
     trades.forEach(trade => {
       totalFees += (trade.fees || 0);
 
-      if (trade.target !== undefined && trade.target !== null && trade.exit_price !== undefined && trade.exit_price !== null) {
+      // Only count trades that have both a target and exit price set, and are valid numbers
+      if (trade.target !== undefined && 
+          trade.target !== null && 
+          trade.exit_price !== undefined && 
+          trade.exit_price !== null &&
+          typeof trade.target === 'number' &&
+          typeof trade.exit_price === 'number' &&
+          trade.target > 0 &&
+          trade.exit_price > 0) {
+        
         tradesWithTarget++;
-        if (trade.trade_type === 'long' && trade.exit_price >= trade.target) {
+        
+        // Check if target was hit based on trade type
+        if (
+          (trade.trade_type === 'Long' || trade.trade_type === 'Buy' || trade.trade_type === 'Sell' || trade.trade_type === 'Buy Call' || trade.trade_type === 'Sell Call') && trade.exit_price >= trade.target
+        ) {
           targetHits++;
-        } else if (trade.trade_type === 'short' && trade.exit_price <= trade.target) {
+        } else if (
+          (trade.trade_type === 'Short' || trade.trade_type === 'Sell Put' || trade.trade_type === 'Buy Put') && trade.exit_price <= trade.target
+        ) {
           targetHits++;
         }
       }
@@ -339,17 +361,19 @@ export default function AnalyticsPage() {
       // Group by day
       const map: Record<string, Trade[]> = {};
       sortedTrades.forEach(trade => {
-        const label = new Date(trade.entry_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
-        if (!map[label]) map[label] = [];
-        map[label].push(trade);
+        const date = new Date(trade.entry_date)
+        const dateKey = date.toISOString().split('T')[0] // YYYY-MM-DD format
+        if (!map[dateKey]) map[dateKey] = [];
+        map[dateKey].push(trade);
       });
       // Ensure 7 days
       const days = [];
       for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
+        const dateKey = d.toISOString().split('T')[0] // YYYY-MM-DD format
         const label = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
-        days.push({ label, trades: map[label] || [] });
+        days.push({ label, trades: map[dateKey] || [] });
       }
       grouped = days;
     } else if (timeframe === "30days") {

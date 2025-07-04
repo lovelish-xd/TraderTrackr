@@ -28,9 +28,7 @@ export default function DashboardPage() {
     profitChange: 0,
   })
   const [equityCurve, setEquityCurve] = useState<{ date: string; value: number }[]>([])
-  const [instrumentPerformance, setInstrumentPerformance] = useState<any[]>([])
-  const [strategyPerformance, setStrategyPerformance] = useState<any[]>([])
-
+ 
   useEffect(() => {
     const fetchTrades = async () => {
       setIsLoading(true)
@@ -76,8 +74,7 @@ export default function DashboardPage() {
         setTrades(data as Trade[])
         calculateMetrics(data as Trade[])
         setEquityCurve(getEquityCurveData(data as Trade[]))
-        setInstrumentPerformance(getInstrumentPerformance(data as Trade[]))
-        setStrategyPerformance(getStrategyPerformance(data as Trade[]))
+        
       } catch (error) {
         // Optionally handle error
       } finally {
@@ -136,26 +133,69 @@ export default function DashboardPage() {
       ? rrRatios.reduce((a, b) => a + b, 0) / rrRatios.length
       : 0;
 
-    // Change calculations (last month vs previous month)
+    // Change calculations (current month vs previous month)
     const now = new Date()
-    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
-    const prevMonth = new Date(now.getFullYear(), now.getMonth() - 2, now.getDate())
-    const tradesLastMonth = trades.filter(t => new Date(t.entry_date) >= lastMonth)
-    const tradesPrevMonth = trades.filter(t => new Date(t.entry_date) >= prevMonth && new Date(t.entry_date) < lastMonth)
-    const tradesChange = tradesPrevMonth.length > 0 ? ((tradesLastMonth.length - tradesPrevMonth.length) / tradesPrevMonth.length) * 100 : 0
-    const winRateLastMonth = tradesLastMonth.length > 0 ? (tradesLastMonth.filter(t => t.profit_loss && t.profit_loss > 0).length / tradesLastMonth.length) * 100 : 0
-    const winRatePrevMonth = tradesPrevMonth.length > 0 ? (tradesPrevMonth.filter(t => t.profit_loss && t.profit_loss > 0).length / tradesPrevMonth.length) * 100 : 0
-    const winRateChange = winRatePrevMonth > 0 ? winRateLastMonth - winRatePrevMonth : 0
-    const profitLastMonth = tradesLastMonth.reduce((sum, t) => sum + (t.profit_loss || 0), 0)
-    const profitPrevMonth = tradesPrevMonth.reduce((sum, t) => sum + (t.profit_loss || 0), 0)
-    const profitChange = profitPrevMonth !== 0 ? ((profitLastMonth - profitPrevMonth) / Math.abs(profitPrevMonth)) * 100 : 0
-    const rrPrevMonth = tradesPrevMonth.map((trade) => {
-      if (trade.target && trade.stop_loss && trade.entry_price) {
-        return Math.abs((trade.target - trade.entry_price) / (trade.entry_price - trade.stop_loss))
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0) // Last day of previous month
+    
+    const tradesCurrentMonth = trades.filter(t => {
+      const tradeDate = new Date(t.entry_date)
+      return tradeDate >= currentMonthStart
+    })
+    const tradesPreviousMonth = trades.filter(t => {
+      const tradeDate = new Date(t.entry_date)
+      return tradeDate >= previousMonthStart && tradeDate <= previousMonthEnd
+    })
+    
+    // Trades change calculation
+    const tradesChange = tradesPreviousMonth.length > 0 
+      ? ((tradesCurrentMonth.length - tradesPreviousMonth.length) / tradesPreviousMonth.length) * 100 
+      : tradesCurrentMonth.length > 0 ? 100 : 0
+    
+    // Win rate calculations
+    const winRateCurrentMonth = tradesCurrentMonth.length > 0 
+      ? (tradesCurrentMonth.filter(t => t.profit_loss && t.profit_loss > 0).length / tradesCurrentMonth.length) * 100 
+      : 0
+    const winRatePreviousMonth = tradesPreviousMonth.length > 0 
+      ? (tradesPreviousMonth.filter(t => t.profit_loss && t.profit_loss > 0).length / tradesPreviousMonth.length) * 100 
+      : 0
+    const winRateChange = winRatePreviousMonth > 0 
+      ? ((winRateCurrentMonth - winRatePreviousMonth) / winRatePreviousMonth) * 100 
+      : winRateCurrentMonth > 0 ? 100 : 0
+    
+    // Profit calculations
+    const profitCurrentMonth = tradesCurrentMonth.reduce((sum, t) => sum + (t.profit_loss || 0), 0)
+    const profitPreviousMonth = tradesPreviousMonth.reduce((sum, t) => sum + (t.profit_loss || 0), 0)
+    const profitChange = profitPreviousMonth !== 0 
+      ? ((profitCurrentMonth - profitPreviousMonth) / Math.abs(profitPreviousMonth)) * 100 
+      : profitCurrentMonth !== 0 ? (profitCurrentMonth > 0 ? 100 : -100) : 0
+    
+    // RR ratio calculations for previous month (using same logic as current)
+    const rrRatiosPrevMonth = tradesPreviousMonth.map((trade) => {
+      const { entry_price, target, stop_loss, trade_type } = trade;
+
+      if (!entry_price || !target || !stop_loss || !trade_type) return null;
+
+      const longTypes = ['Buy', 'Buy Call', 'Buy Put', 'Long'];
+      const shortTypes = ['Sell', 'Sell Call', 'Sell Put', 'Short'];
+
+      if (longTypes.includes(trade_type)) {
+        return (target - entry_price) / (entry_price - stop_loss);
+      } else if (shortTypes.includes(trade_type)) {
+        return (entry_price - target) / (stop_loss - entry_price);
       }
-      return null
-    }).filter((v) => v !== null) as number[]
-    const rrChange = rrPrevMonth.length > 0 ? avgRR - (rrPrevMonth.reduce((a, b) => a + b, 0) / rrPrevMonth.length) : 0
+
+      return null;
+    }).filter((v) => v !== null && isFinite(v)) as number[];
+
+    const avgRRPrevMonth = rrRatiosPrevMonth.length > 0
+      ? rrRatiosPrevMonth.reduce((a, b) => a + b, 0) / rrRatiosPrevMonth.length
+      : 0;
+    
+    const rrChange = avgRRPrevMonth > 0 
+      ? ((avgRR - avgRRPrevMonth) / avgRRPrevMonth) * 100 
+      : avgRR > 0 ? 100 : 0
     setMetrics({
       totalTrades,
       winRate,
@@ -184,39 +224,6 @@ export default function DashboardPage() {
     return curve
   }
 
-  const getInstrumentPerformance = (trades: Trade[]) => {
-    const instrumentMap: Record<string, { count: number; PnL: number; }> = {}
-    trades.forEach((trade) => {
-      const type = trade.instrument_type || "Unknown"
-      if (!instrumentMap[type]) {
-        instrumentMap[type] = { count: 0, PnL: 0 }
-      }
-      instrumentMap[type].count += 1
-      instrumentMap[type].PnL += trade.profit_loss || 0
-    })
-    return Object.entries(instrumentMap).map(([type, value]) => ({
-      name: type,
-      PnL: parseFloat(value.PnL.toFixed(2)),
-      value: value.count,
-    }))
-  }
-
-  const getStrategyPerformance = (trades: Trade[]) => {
-    const strategyMap: Record<string, { count: number; PnL: number; }> = {}
-    trades.forEach((trade) => {
-      const strategy = trade.strategy || "Unknown"
-      if (!strategyMap[strategy]) {
-        strategyMap[strategy] = { count: 0, PnL: 0 }
-      }
-      strategyMap[strategy].count += 1
-      strategyMap[strategy].PnL += trade.profit_loss || 0
-    })
-    return Object.entries(strategyMap).map(([type, value]) => ({
-      name: type,
-      PnL: parseFloat(value.PnL.toFixed(2)),
-      value: value.count,
-    }))
-  }
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -311,7 +318,6 @@ export default function DashboardPage() {
             <Tabs defaultValue="overview" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
                 <TabsTrigger value="reports">Reports</TabsTrigger>
               </TabsList>
               <TabsContent value="overview" className="space-y-4">
@@ -364,32 +370,6 @@ export default function DashboardPage() {
                     </CardContent>
                   </Card>
                   
-                </div>
-              </TabsContent>
-              <TabsContent value="analytics" className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <Card className="col-span-2">
-                    <CardHeader>
-                      <CardTitle>Monthly Performance</CardTitle>
-                      <CardDescription>Your trading performance by month</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pl-2">
-                      <div className="h-[300px] w-full bg-muted/20 rounded-md flex items-center justify-center text-muted-foreground">
-                        Monthly Performance Chart
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Win/Loss Ratio</CardTitle>
-                      <CardDescription>Distribution of winning and losing trades</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pl-2">
-                      <div className="h-[300px] w-full bg-muted/20 rounded-md flex items-center justify-center text-muted-foreground">
-                        Win/Loss Pie Chart
-                      </div>
-                    </CardContent>
-                  </Card>
                 </div>
               </TabsContent>
               <TabsContent value="reports" className="space-y-4">

@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase"
 
 
 export default function TradingCalendar() {
-  const [currentDate, setCurrentDate] = useState<Date>(new Date(2025, 5, 1)); 
+  const [currentDate, setCurrentDate] = useState<Date>(new Date()); 
   const [expandedCell, setExpandedCell] = useState<string | null>(null);
   const [tradeData, setTradeData] = useState<Record<string, { profit: number; trades: number }>>({});
 

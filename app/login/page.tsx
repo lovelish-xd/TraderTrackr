@@ -97,7 +97,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex h-screen w-screen">
+    <>
+      {isLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-80">
+          <div className="flex flex-col items-center">
+            <svg className="animate-spin h-10 w-10 text-[#185E61]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#185E61" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="#185E61" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <span className="mt-4 text-[#185E61] font-semibold">Loading...</span>
+          </div>
+        </div>
+      )}
+      <div className="flex h-screen w-screen">
       {/* Left Section - Image / Branding */}
       <div className="hidden md:flex w-1/2 items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
@@ -224,5 +236,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  </>
   )
 }
