@@ -163,7 +163,7 @@ export default function SignupPage() {
         {/* Right Section - Signup Form */}
         <div className="w-1/2 flex items-center justify-center  relative">
           <div className="w-full p-8">
-            <Card className="w-full p-8">
+            <Card className="w-full p-8 shadow-lg border-0 bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle>Sign Up</CardTitle>
                 <CardDescription>Fill in the details below to create your account.</CardDescription>

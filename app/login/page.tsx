@@ -139,7 +139,7 @@ export default function LoginPage() {
             <span className="font-bold text-lg text-[#185E61]">TraderTrackr</span>
             </Link>
 
-          <Card className="min-h-[600px] min-w-[100%] p-8">
+          <Card className="min-h-[600px] min-w-[100%] p-8 shadow-lg border-0 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Login</CardTitle>
               <CardDescription>Enter your email and password to login</CardDescription>
