@@ -73,7 +73,7 @@ export default function Home() {
             {/* Desktop Auth Buttons */}
             <div className="hidden md:flex items-center gap-3">
               <Link href="/login">
-                <Button variant="ghost" className="text-[#185E61] hover:bg-[#185E61]/10 font-medium">
+                <Button variant="ghost" className="text-[#185E61] hover:bg-[#185E61]/10 hover:text-black font-medium">
                   Login
                 </Button>
               </Link>

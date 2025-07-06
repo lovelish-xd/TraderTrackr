@@ -7,12 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowUpIcon, BarChart3, LineChart, TrendingUp } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import type { Trade } from "@/lib/supabase"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { PieChart as RePieChart, Pie, Cell, Tooltip as ReTooltip, BarChart as ReBarChart, XAxis, YAxis, Bar, ResponsiveContainer, LineChart as ReLineChart, Line, CartesianGrid } from "recharts"
+import { Tooltip as ReTooltip, XAxis, YAxis, ResponsiveContainer, LineChart as ReLineChart, Line, CartesianGrid } from "recharts"
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [trades, setTrades] = useState<Trade[]>([])
   const [metrics, setMetrics] = useState({
     totalTrades: 0,
@@ -30,43 +29,31 @@ export default function DashboardPage() {
   const [equityCurve, setEquityCurve] = useState<{ date: string; value: number }[]>([])
 
   useEffect(() => {
-    const fetchTrades = async () => {
+    const checkAuthAndFetchTrades = async () => {
       setIsLoading(true)
+      
       try {
-        const { data: userData, error: userError } = await supabase.auth.getUser()
-        if (userError) throw userError
-        const userId = userData.user?.id
-        if (!userId) {
-          <div className="flex h-screen flex-col items-center justify-center bg-[#185e61]">
-            <div className='flex flex-col items-center justify-center gap-4 border border-1 bg-white p-6 rounded-lg shadow-md'>
-              <Link href="/" className="flex items-center gap-2 font-bold text-[#185E61]">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-6 w-6"
-                >
-                  <path d="M5 16V9h14V2H5l14 14h-7m-7 0 7 7v-7m-7 0h7" />
-                </svg>
-                <span>TraderTrackr</span>
-              </Link>
-              <h1 className="text-2xl font-bold">You are not logged in</h1>
-              <p className="text-muted-foreground">Please log in to access the dashboard</p>
-              <div className="flex gap-2">
-                <Button asChild className='bg-[#185E61] text-white hover:bg-[#0f4c4e]'>
-                  <Link href="/login">Login</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href="/signup">Sign Up</Link>
-                </Button>
-              </div>
-            </div>
-          </div>
+        // First check if there's an active session
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError || !sessionData.session) {
+          window.location.href = '/login'
+          return
         }
+
+        // Then get user data
+        const { data: userData, error: userError } = await supabase.auth.getUser()
+        
+        // Check if user is authenticated
+        if (userError || !userData.user?.id) {
+          // Redirect to login if not authenticated
+          window.location.href = '/login'
+          return
+        }
+        
+        const userId = userData.user.id
+        setIsAuthenticated(true)
+        
         // Fetch all trades for the user
         let query = supabase.from("trades").select("*").eq("user_id", userId).order("entry_date", { ascending: false })
         const { data, error } = await query
@@ -76,12 +63,20 @@ export default function DashboardPage() {
         setEquityCurve(getEquityCurveData(data as Trade[]))
 
       } catch (error) {
-        // Optionally handle error
+        console.error('Error fetching trades:', error)
+        // If there's an auth error, redirect to login
+        if (error && typeof error === 'object' && 'message' in error) {
+          const errorMessage = (error as { message: string }).message
+          if (errorMessage.includes('Auth session missing') || errorMessage.includes('JWT')) {
+            window.location.href = '/login'
+            return
+          }
+        }
       } finally {
         setIsLoading(false)
       }
     }
-    fetchTrades()
+    checkAuthAndFetchTrades()
   }, [])
 
   const calculateMetrics = (trades: Trade[]) => {
@@ -245,6 +240,12 @@ export default function DashboardPage() {
         {isLoading ? (
           <div className="flex h-40 items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          </div>
+        ) : !isAuthenticated ? (
+          <div className="flex h-40 items-center justify-center">
+            <div className="text-center">
+              <p className="text-muted-foreground">Redirecting to login...</p>
+            </div>
           </div>
         ) : trades.length === 0 ? (
           <Card>
