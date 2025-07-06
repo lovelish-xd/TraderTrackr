@@ -15,9 +15,11 @@ import { supabase } from "@/lib/supabase"
 import type { Trade } from "@/lib/supabase"
 import { ArrowUpDown, Download, Filter, PlusCircle, Search } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function TradesPage() {
   const { toast } = useToast()
+  const { isLoading: authLoading, isAuthenticated, userId } = useAuth()
   const [trades, setTrades] = useState<Trade[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filters, setFilters] = useState({
@@ -34,19 +36,10 @@ export default function TradesPage() {
 
   useEffect(() => {
     const fetchTrades = async () => {
+      if (!isAuthenticated || !userId) return
+      
+      setIsLoading(true)
       try {
-        const { data: userData, error: userError } = await supabase.auth.getUser()
-
-        if (userError) {
-          throw userError
-        }
-
-        const userId = userData.user?.id
-
-        if (!userId) {
-          throw new Error("User not authenticated")
-        }
-
         let query = supabase.from("trades").select("*").eq("user_id", userId).order("entry_date", { ascending: false })
 
         // Apply filters
@@ -110,7 +103,7 @@ export default function TradesPage() {
 
     fetchTrades()
     setCurrentPage(1) // Reset to first page when filters change
-  }, [toast, filters])
+  }, [isAuthenticated, userId, filters])
 
   const handleFilterChange = (name: string, value: string) => {
     setFilters({
@@ -219,12 +212,24 @@ export default function TradesPage() {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Trades</h1>
-          <div className="flex gap-2">
-            <Button onClick={exportToCsv} className="bg-[#185E61] hover:bg-[#2A7174]">
-              <Download className="mr-2 h-4 w-4" />
-              Export
+        {authLoading ? (
+          <div className="flex h-40 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          </div>
+        ) : !isAuthenticated ? (
+          <div className="flex h-40 items-center justify-center">
+            <div className="text-center">
+              <p className="text-muted-foreground">Redirecting to login...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold">Trades</h1>
+              <div className="flex gap-2">
+                <Button onClick={exportToCsv} className="bg-[#185E61] hover:bg-[#2A7174]">
+                  <Download className="mr-2 h-4 w-4" />
+                  Export
             </Button>
             <Button asChild className="bg-[#185E61] hover:bg-[#2A7174]">
               <Link href="/dashboard/trades/new">
@@ -498,6 +503,8 @@ export default function TradesPage() {
             )}
           </CardContent>
         </Card>
+          </>
+        )}
       </div>
     </DashboardLayout>
   )

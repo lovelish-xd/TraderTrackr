@@ -5,23 +5,20 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/hooks/use-auth"
 
 
 export default function TradingCalendar() {
+  const { isLoading: authLoading, isAuthenticated, userId } = useAuth()
   const [currentDate, setCurrentDate] = useState<Date>(new Date()); 
   const [expandedCell, setExpandedCell] = useState<string | null>(null);
   const [tradeData, setTradeData] = useState<Record<string, { profit: number; trades: number }>>({});
 
   useEffect(() => {
     const fetchTrades = async () => {
+      if (!isAuthenticated || !userId) return
+      
       try {
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-  
-        if (userError) throw userError;
-  
-        const userId = userData.user?.id;
-        if (!userId) throw new Error("User not authenticated");
-  
         const { data, error } = await supabase
           .from("trades")
           .select("*")
@@ -47,7 +44,7 @@ export default function TradingCalendar() {
     };
   
     fetchTrades();
-  }, [currentDate]);
+  }, [isAuthenticated, userId, currentDate]);
   
 
 
@@ -117,15 +114,27 @@ export default function TradingCalendar() {
   return (
     <DashboardLayout>
       <div className="p-4 sm:p-6 max-w-5xl mx-auto bg-gray-50 dark:bg-black min-h-screen">
-        <div className="flex justify-between items-center mb-4 sm:mb-6">
-          <Button onClick={() => navigateMonth(-1)} variant="outline" className="gap-2 bg-[#185E61] hover:bg-[#2A7174] hover:text-gray-200 text-gray-200 ">
-            <ChevronLeft className="w-4 h-4" />
-            Prev
-          </Button>
-          <h2 className="text-lg sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
-            {getMonthName(currentDate)}
-          </h2>
-          <Button onClick={() => navigateMonth(1)} variant="outline" className="gap-2 bg-[#185E61] hover:bg-[#2A7174] hover:text-gray-200 text-gray-200">
+        {authLoading ? (
+          <div className="flex h-40 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          </div>
+        ) : !isAuthenticated ? (
+          <div className="flex h-40 items-center justify-center">
+            <div className="text-center">
+              <p className="text-muted-foreground">Redirecting to login...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between items-center mb-4 sm:mb-6">
+              <Button onClick={() => navigateMonth(-1)} variant="outline" className="gap-2 bg-[#185E61] hover:bg-[#2A7174] hover:text-gray-200 text-gray-200 ">
+                <ChevronLeft className="w-4 h-4" />
+                Prev
+              </Button>
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
+                {getMonthName(currentDate)}
+              </h2>
+              <Button onClick={() => navigateMonth(1)} variant="outline" className="gap-2 bg-[#185E61] hover:bg-[#2A7174] hover:text-gray-200 text-gray-200">
             Next
             <ChevronRight className="w-4 h-4" />
           </Button>
@@ -208,6 +217,8 @@ export default function TradingCalendar() {
             <span className="text-gray-600 dark:text-gray-300">No Trade Day</span>
           </div>
         </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

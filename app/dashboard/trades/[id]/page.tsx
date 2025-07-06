@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
 import type { Trade } from "@/lib/supabase"
 import { ArrowLeft, Edit, Trash2 } from "lucide-react"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function TradeDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   // Unwrap the params Promise using React.use()
@@ -16,20 +17,17 @@ export default function TradeDetailsPage({ params }: { params: Promise<{ id: str
   
   const router = useRouter()
   const { toast } = useToast()
+  const { isLoading: authLoading, isAuthenticated, userId } = useAuth()
   const [trade, setTrade] = useState<Trade | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [screenshotUrl, setScreenshotUrl] = useState("")
 
   useEffect(() => {
     const fetchTrade = async () => {
+      if (!isAuthenticated || !userId) return
+      
+      setIsLoading(true)
       try {
-        const { data: userData, error: userError } = await supabase.auth.getUser()
-
-        if (userError) {
-          throw userError
-        }
-
-        const userId = userData.user?.id
 
         if (!userId) {
           throw new Error("User not authenticated")
@@ -105,7 +103,7 @@ export default function TradeDetailsPage({ params }: { params: Promise<{ id: str
 
     fetchTrade()
 
-  }, [resolvedParams.id, router, toast])
+  }, [isAuthenticated, userId, resolvedParams.id, router, toast])
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this trade?")) {
@@ -146,11 +144,23 @@ export default function TradeDetailsPage({ params }: { params: Promise<{ id: str
     }).format(value)
   }
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <DashboardLayout>
         <div className="flex h-40 items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardLayout>
+        <div className="flex h-40 items-center justify-center">
+          <div className="text-center">
+            <p className="text-muted-foreground">Redirecting to login...</p>
+          </div>
         </div>
       </DashboardLayout>
     )

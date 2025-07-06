@@ -10,9 +10,11 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
 import type { User } from "@supabase/supabase-js"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function ProfilePage() {
   const { toast } = useToast()
+  const { isLoading: authLoading, isAuthenticated, userId } = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -27,6 +29,9 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const getProfile = async () => {
+      if (!isAuthenticated || !userId) return
+      
+      setIsLoading(true)
       try {
         const { data: userData, error: userError } = await supabase.auth.getUser()
         if (userError) throw userError
@@ -56,7 +61,7 @@ export default function ProfilePage() {
       }
     }
     getProfile()
-  }, [toast])
+  }, [isAuthenticated, userId])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setProfile({
@@ -103,11 +108,23 @@ export default function ProfilePage() {
     }
   }
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <DashboardLayout>
         <div className="flex h-40 items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardLayout>
+        <div className="flex h-40 items-center justify-center">
+          <div className="text-center">
+            <p className="text-muted-foreground">Redirecting to login...</p>
+          </div>
         </div>
       </DashboardLayout>
     )

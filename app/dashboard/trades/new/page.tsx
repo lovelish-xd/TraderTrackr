@@ -14,10 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
 import { X } from "lucide-react"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function NewTradePage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { isLoading: authLoading, isAuthenticated, userId } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null)
 
@@ -212,15 +214,27 @@ export default function NewTradePage() {
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-4xl">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Add New Trade</h1>
-        </div>
-        <form onSubmit={handleSubmit}>
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Trade Details</CardTitle>
-              <CardDescription>Enter the basic information about your trade</CardDescription>
-            </CardHeader>
+        {authLoading ? (
+          <div className="flex h-40 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          </div>
+        ) : !isAuthenticated ? (
+          <div className="flex h-40 items-center justify-center">
+            <div className="text-center">
+              <p className="text-muted-foreground">Redirecting to login...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-3xl font-bold">Add New Trade</h1>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Trade Details</CardTitle>
+                  <CardDescription>Enter the basic information about your trade</CardDescription>
+                </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -583,6 +597,8 @@ export default function NewTradePage() {
             </Button>
           </CardFooter>
         </form>
+          </>
+        )}
       </div>
     </DashboardLayout>
   )

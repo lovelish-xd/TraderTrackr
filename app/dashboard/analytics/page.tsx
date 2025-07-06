@@ -10,9 +10,11 @@ import { supabase } from "@/lib/supabase"
 import type { Trade } from "@/lib/supabase"
 import { PieChart as RePieChart, Pie, Cell, Tooltip as ReTooltip, BarChart as ReBarChart, XAxis, YAxis, Bar, ResponsiveContainer, LineChart as ReLineChart, Line, CartesianGrid } from "recharts"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useAuth } from "@/hooks/use-auth"
 
 export default function AnalyticsPage() {
   const { toast } = useToast()
+  const { isLoading: authLoading, isAuthenticated, userId } = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [trades, setTrades] = useState<Trade[]>([])
   const [timeframe, setTimeframe] = useState("30days")
@@ -154,19 +156,10 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     const fetchTrades = async () => {
+      if (!isAuthenticated || !userId) return
+      
+      setIsLoading(true)
       try {
-        const { data: userData, error: userError } = await supabase.auth.getUser()
-
-        if (userError) {
-          throw userError
-        }
-
-        const userId = userData.user?.id
-
-        if (!userId) {
-          throw new Error("User not authenticated")
-        }
-
         let query = supabase.from("trades").select("*").eq("user_id", userId).order("entry_date", { ascending: false })
 
         // Apply timeframe filter
@@ -272,7 +265,7 @@ export default function AnalyticsPage() {
     }
 
     fetchTrades()
-  }, [toast, timeframe])
+  }, [isAuthenticated, userId, timeframe])
 
   const calculateMetrics = (trades: Trade[]) => {
     const totalTrades = trades.length
@@ -472,19 +465,31 @@ export default function AnalyticsPage() {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Analytics</h1>
-          <Select value={timeframe} onValueChange={setTimeframe}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select timeframe" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7days">Last 7 days</SelectItem>
-              <SelectItem value="30days">Last 30 days</SelectItem>
-              <SelectItem value="90days">Last 90 days</SelectItem>
-              <SelectItem value="year">Last year</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
+        {authLoading ? (
+          <div className="flex h-40 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          </div>
+        ) : !isAuthenticated ? (
+          <div className="flex h-40 items-center justify-center">
+            <div className="text-center">
+              <p className="text-muted-foreground">Redirecting to login...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold">Analytics</h1>
+              <Select value={timeframe} onValueChange={setTimeframe}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select timeframe" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7days">Last 7 days</SelectItem>
+                  <SelectItem value="30days">Last 30 days</SelectItem>
+                  <SelectItem value="90days">Last 90 days</SelectItem>
+                  <SelectItem value="year">Last year</SelectItem>
+                  <SelectItem value="all">All Time</SelectItem>
+                </SelectContent>
           </Select>
         </div>
 
@@ -885,6 +890,8 @@ export default function AnalyticsPage() {
                 </div>
               </TabsContent>
             </Tabs>
+          </>
+        )}
           </>
         )}
       </div>

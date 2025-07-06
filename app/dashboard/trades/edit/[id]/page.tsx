@@ -12,10 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
 import { X } from "lucide-react"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function EditTradePage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { isLoading: authLoading, isAuthenticated, userId } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null)
   const [isDataLoaded, setIsDataLoaded] = useState(false) // Add this flag
@@ -117,12 +119,9 @@ export default function EditTradePage() {
 
   useEffect(() => {
     const fetchTrade = async () => {
-      if (!tradeId) return;
+      if (!tradeId || !isAuthenticated || !userId) return;
+      
       try {
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-        const userId = userData.user?.id;
-        if (!userId) throw new Error("User not authenticated");
         const { data, error } = await supabase
           .from("trades")
           .select("*")
@@ -161,7 +160,7 @@ export default function EditTradePage() {
       }
     };
     fetchTrade();
-  }, [tradeId]);
+  }, [isAuthenticated, userId, tradeId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -248,7 +247,19 @@ export default function EditTradePage() {
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-4xl">
-        <div className="flex items-center justify-between mb-6">
+        {authLoading || !isDataLoaded ? (
+          <div className="flex h-40 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          </div>
+        ) : !isAuthenticated ? (
+          <div className="flex h-40 items-center justify-center">
+            <div className="text-center">
+              <p className="text-muted-foreground">Redirecting to login...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Edit Trade</h1>
         </div>
         <form onSubmit={handleSubmit}>
@@ -618,6 +629,8 @@ export default function EditTradePage() {
             </Button>
           </CardFooter>
         </form>
+          </>
+        )}
       </div>
     </DashboardLayout>
   )

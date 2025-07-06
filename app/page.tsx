@@ -555,7 +555,7 @@ export default function Home() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/analytics" className="text-white/70 hover:text-white transition-colors text-sm">
+                  <Link href="/dashboard/analytics" className="text-white/70 hover:text-white transition-colors text-sm">
                     Analytics
                   </Link>
                 </li>

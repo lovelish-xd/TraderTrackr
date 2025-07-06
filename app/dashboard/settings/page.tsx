@@ -12,6 +12,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/hooks/use-auth"
 
 const currencyOptions = [
   { value: "USD", label: "USD ($)" },
@@ -20,6 +21,7 @@ const currencyOptions = [
 
 export default function SettingsPage() {
   const { toast } = useToast()
+  const { isLoading: authLoading, isAuthenticated, userId } = useAuth()
   const [tradeSummaryEmails, setTradeSummaryEmails] = useState(true)
   const [currency, setCurrency] = useState("USD")
   const [showClearDialog, setShowClearDialog] = useState(false)
@@ -30,13 +32,15 @@ export default function SettingsPage() {
   // Fetch user email on mount
   useEffect(() => {
     const fetchUserEmail = async () => {
+      if (!isAuthenticated || !userId) return
+      
       const { data, error } = await supabase.auth.getUser()
       if (data?.user?.email) {
         setEmail(data.user.email)
       }
     }
     fetchUserEmail()
-  }, [])
+  }, [isAuthenticated, userId])
 
 
   const handleResetPassword = async () => {
@@ -103,12 +107,24 @@ export default function SettingsPage() {
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-2xl space-y-8">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold">Settings</h1>
-        </div>
-        {/* Security Settings */}
-        <Card>
-          <CardHeader>
+        {authLoading ? (
+          <div className="flex h-40 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          </div>
+        ) : !isAuthenticated ? (
+          <div className="flex h-40 items-center justify-center">
+            <div className="text-center">
+              <p className="text-muted-foreground">Redirecting to login...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-3xl font-bold">Settings</h1>
+            </div>
+            {/* Security Settings */}
+            <Card>
+              <CardHeader>
             <CardTitle>Security Settings</CardTitle>
             <CardDescription>Manage your account security</CardDescription>
           </CardHeader>
@@ -282,6 +298,8 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+          </>
+        )}
       </div>
     </DashboardLayout>
   )

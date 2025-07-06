@@ -8,10 +8,10 @@ import { ArrowUpIcon, BarChart3, LineChart, TrendingUp } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import type { Trade } from "@/lib/supabase"
 import { Tooltip as ReTooltip, XAxis, YAxis, ResponsiveContainer, LineChart as ReLineChart, Line, CartesianGrid } from "recharts"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function DashboardPage() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { isLoading, isAuthenticated, userId } = useAuth()
   const [trades, setTrades] = useState<Trade[]>([])
   const [metrics, setMetrics] = useState({
     totalTrades: 0,
@@ -29,31 +29,10 @@ export default function DashboardPage() {
   const [equityCurve, setEquityCurve] = useState<{ date: string; value: number }[]>([])
 
   useEffect(() => {
-    const checkAuthAndFetchTrades = async () => {
-      setIsLoading(true)
+    const fetchTrades = async () => {
+      if (!isAuthenticated || !userId) return
       
       try {
-        // First check if there's an active session
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-        
-        if (sessionError || !sessionData.session) {
-          window.location.href = '/login'
-          return
-        }
-
-        // Then get user data
-        const { data: userData, error: userError } = await supabase.auth.getUser()
-        
-        // Check if user is authenticated
-        if (userError || !userData.user?.id) {
-          // Redirect to login if not authenticated
-          window.location.href = '/login'
-          return
-        }
-        
-        const userId = userData.user.id
-        setIsAuthenticated(true)
-        
         // Fetch all trades for the user
         let query = supabase.from("trades").select("*").eq("user_id", userId).order("entry_date", { ascending: false })
         const { data, error } = await query
@@ -64,20 +43,11 @@ export default function DashboardPage() {
 
       } catch (error) {
         console.error('Error fetching trades:', error)
-        // If there's an auth error, redirect to login
-        if (error && typeof error === 'object' && 'message' in error) {
-          const errorMessage = (error as { message: string }).message
-          if (errorMessage.includes('Auth session missing') || errorMessage.includes('JWT')) {
-            window.location.href = '/login'
-            return
-          }
-        }
-      } finally {
-        setIsLoading(false)
       }
     }
-    checkAuthAndFetchTrades()
-  }, [])
+    
+    fetchTrades()
+  }, [isAuthenticated, userId])
 
   const calculateMetrics = (trades: Trade[]) => {
     const totalTrades = trades.length
