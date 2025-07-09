@@ -33,7 +33,6 @@ export type User = {
   created_at: string
   updated_at: string
   name?: string
-  avatar_url?: string
 }
 
 export type Trade = {

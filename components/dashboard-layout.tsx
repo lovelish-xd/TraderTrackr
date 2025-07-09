@@ -317,7 +317,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <Link href="/dashboard/profile">
                     <span className="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full">
                       <span className="flex h-full w-full items-center justify-center rounded-full bg-muted">
-                        {user.email ? user.email[0].toUpperCase() : "U"}
+                        {user.user_metadata?.first_name ? user.user_metadata.first_name[0].toUpperCase() : "U"}
                       </span>
                     </span>
                     <span className="sr-only">View profile</span>
