@@ -172,38 +172,57 @@ export default function TradeDetailsPage({ params }: { params: Promise<{ id: str
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" onClick={() => router.push("/dashboard/trades")}>
+      <div className="flex flex-col gap-4 p-4 sm:p-6">
+        {/* Header Section - Mobile Responsive */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Button 
+              variant="outline" 
+              onClick={() => router.push("/dashboard/trades")}
+              className="shrink-0"
+            >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Trades
+              <span className="hidden sm:inline">Back to Trades</span>
+              <span className="sm:hidden">Back</span>
             </Button>
-            
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => router.push(`/dashboard/trades/edit/${resolvedParams.id}`)}>
+          
+          {/* Action Buttons - Stack on mobile, inline on desktop */}
+          <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => router.push(`/dashboard/trades/edit/${resolvedParams.id}`)}
+              className="w-full sm:w-auto"
+            >
               <Edit className="mr-2 h-4 w-4" />
-              Edit Trade
+              <span className="hidden sm:inline">Edit Trade</span>
+              <span className="sm:hidden">Edit</span>
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button 
+              variant="destructive" 
+              onClick={handleDelete}
+              className="w-full sm:w-auto"
+            >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete Trade
+              <span className="hidden sm:inline">Delete Trade</span>
+              <span className="sm:hidden">Delete</span>
             </Button>
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card className="md:col-span-2">
+        {/* Main Content - Mobile Responsive Grid */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          {/* Trade Information Card */}
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Trade Information</CardTitle>
               <CardDescription>Basic details about the trade</CardDescription>
             </CardHeader>
-            <CardContent className="gridgap-4">
-              <div className="grid grid-cols-5 gap-x-4 gap-y-6">
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-y-6">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Ticker Symbol</p>
-                  <p className="text-lg font-semibold">{trade.ticker_symbol}</p>
+                  <p className="text-lg font-semibold break-all">{trade.ticker_symbol}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Instrument Type</p>
@@ -237,24 +256,25 @@ export default function TradeDetailsPage({ params }: { params: Promise<{ id: str
                   <p className="text-sm font-medium text-muted-foreground">Exit Date</p>
                   <p className="text-lg font-semibold">{trade.exit_date ? formatDate(trade.exit_date) : "-"}</p>
                 </div>
-                
               </div>
             </CardContent>
           </Card>
-          <Card className="md:col-span-2" >
+
+          {/* Trade Performance Card */}
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Trade Performance</CardTitle>
               <CardDescription>Financial details and outcomes</CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4">
-              <div className="grid grid-cols-5 gap-x-4 gap-y-6">
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-y-6">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Entry Price</p>
-                  <p className="text-lg font-semibold">{formatCurrency(trade.entry_price, trade.currency)}</p>
+                  <p className="text-lg font-semibold break-all">{formatCurrency(trade.entry_price, trade.currency)}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Exit Price</p>
-                  <p className="text-lg font-semibold">{formatCurrency(trade.exit_price, trade.currency) || "-"}</p>
+                  <p className="text-lg font-semibold break-all">{formatCurrency(trade.exit_price, trade.currency) || "-"}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Position Size</p>
@@ -262,19 +282,19 @@ export default function TradeDetailsPage({ params }: { params: Promise<{ id: str
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Stop Loss</p>
-                  <p className="text-lg font-semibold">{formatCurrency(trade.stop_loss, trade.currency) || "-"}</p>
+                  <p className="text-lg font-semibold break-all">{formatCurrency(trade.stop_loss, trade.currency) || "-"}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Target</p>
-                  <p className="text-lg font-semibold">{formatCurrency(trade.target, trade.currency) || "-"}</p>
+                  <p className="text-lg font-semibold break-all">{formatCurrency(trade.target, trade.currency) || "-"}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Fees/Commisions</p>
-                  <p className="text-lg font-semibold">{formatCurrency(trade.fees, trade.currency) || "-"}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Fees/Commissions</p>
+                  <p className="text-lg font-semibold break-all">{formatCurrency(trade.fees, trade.currency) || "-"}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Profit/Loss</p>
-                  <p className={`text-lg font-semibold ${trade.profit_loss ? (trade.profit_loss > 0 ? "text-green-500" : "text-red-500") : ""}`}>
+                  <p className={`text-lg font-semibold break-all ${trade.profit_loss ? (trade.profit_loss > 0 ? "text-green-500" : "text-red-500") : ""}`}>
                     {formatCurrency(trade.profit_loss, trade.currency)}
                   </p>
                 </div>
@@ -282,58 +302,68 @@ export default function TradeDetailsPage({ params }: { params: Promise<{ id: str
             </CardContent>
           </Card>
 
+          {/* Trade Analysis Card */}
           {(trade.rationale || trade.market_conditions || trade.pre_trade_emotion || trade.post_trade_reflection) && (
-            <Card className="md:col-span-2">
+            <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle>Trade Analysis</CardTitle>
                 <CardDescription>Additional information and reflections about the trade</CardDescription>
               </CardHeader>
-              <CardContent className="grid gap-4">
+              <CardContent className="space-y-4">
                 {trade.rationale && (
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Trade Rationale</p>
-                    <p className="mt-1 whitespace-pre-wrap">{trade.rationale}</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Trade Rationale</p>
+                    <div className="rounded-md bg-muted/50 p-3">
+                      <p className="whitespace-pre-wrap text-sm">{trade.rationale}</p>
+                    </div>
                   </div>
                 )}
                 {trade.market_conditions && (
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Market Conditions</p>
-                    <p className="mt-1 whitespace-pre-wrap">{trade.market_conditions}</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Market Conditions</p>
+                    <div className="rounded-md bg-muted/50 p-3">
+                      <p className="whitespace-pre-wrap text-sm">{trade.market_conditions}</p>
+                    </div>
                   </div>
                 )}
                 {trade.pre_trade_emotion && (
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Pre-trade Mindset</p>
-                    <p className="mt-1 whitespace-pre-wrap">{trade.pre_trade_emotion}</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Pre-trade Mindset</p>
+                    <div className="rounded-md bg-muted/50 p-3">
+                      <p className="whitespace-pre-wrap text-sm">{trade.pre_trade_emotion}</p>
+                    </div>
                   </div>
                 )}
                 {trade.post_trade_reflection && (
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Post-trade Reflection</p>
-                    <p className="mt-1 whitespace-pre-wrap">{trade.post_trade_reflection}</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Post-trade Reflection</p>
+                    <div className="rounded-md bg-muted/50 p-3">
+                      <p className="whitespace-pre-wrap text-sm">{trade.post_trade_reflection}</p>
+                    </div>
                   </div>
                 )}
               </CardContent>
             </Card>
           )}
-          {screenshotUrl && (
-  <Card className="md:col-span-2">
-    <CardHeader>
-      <CardTitle>Trade Screenshot</CardTitle>
-      <CardDescription>A visual reference associated with this trade</CardDescription>
-    </CardHeader>
-    <CardContent>
-      <div className="w-full rounded-md overflow-hidden border">
-        <img
-          src={screenshotUrl}
-          alt="Trade Screenshot"
-          className="w-full h-auto object-contain"
-        />
-      </div>
-    </CardContent>
-  </Card>
-)}
 
+          {/* Trade Screenshot Card */}
+          {screenshotUrl && (
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Trade Screenshot</CardTitle>
+                <CardDescription>A visual reference associated with this trade</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="w-full rounded-md overflow-hidden border">
+                  <img
+                    src={screenshotUrl}
+                    alt="Trade Screenshot"
+                    className="w-full h-auto object-contain "
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </DashboardLayout>
