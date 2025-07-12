@@ -44,7 +44,7 @@ export default function CompleteProfilePage() {
 
       const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
 
-      if (profile) {
+      if (profile && profile.country) {
         // profile already exists, redirect
         router.push("/dashboard")
       } else {
@@ -83,8 +83,8 @@ export default function CompleteProfilePage() {
     }
 
     toast({
-      title: "Profile saved!",
-      description: "Redirecting to your dashboard...",
+      title: "Login Successful",
+      description: "Welcome to the TraderTrackr!",
     })
 
     router.push("/dashboard")

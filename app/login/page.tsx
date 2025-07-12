@@ -25,11 +25,23 @@ export default function LoginPage() {
 
   useEffect(() => {
     const confirmed = searchParams.get("confirmed")
+    const error = searchParams.get("error")
+    
     if (confirmed === "true") {
       setTimeout(() => {
         toast({
           title: "Email verified!",
           description: "You can now log in.",
+        })
+      }, 300)
+    }
+    
+    if (error) {
+      setTimeout(() => {
+        toast({
+          title: "Authentication Error",
+          description: decodeURIComponent(error),
+          variant: "destructive",
         })
       }, 300)
     }
@@ -75,18 +87,31 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setIsLoading(true)
+    
+    // Debug logging
+    console.log("Starting Google login...")
+    console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log("Has Anon Key:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+    console.log("Redirect URL:", `${window.location.origin}/auth/callback`)
+    
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
         },
       })
 
+      console.log("OAuth response:", { data, error })
+
       if (error) {
         throw error
       }
+
+      // The redirect will happen automatically, so we don't need to set loading to false here
+      // The loading state will be cleared when the user is redirected
     } catch (error: any) {
+      console.error("Google login error:", error)
       toast({
         title: "Error",
         description: error.message || "Something went wrong. Please try again.",
