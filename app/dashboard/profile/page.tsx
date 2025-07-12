@@ -39,7 +39,7 @@ export default function ProfilePage() {
         setUser(userData.user)
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("first_name,last_name,created_at")
+          .select("first_name,last_name, country, created_at")
           .eq("id", userData.user.id)
           .single()
         if (profileError && profileError.code !== "PGRST116") throw profileError
@@ -47,7 +47,7 @@ export default function ProfilePage() {
           first_name: profileData?.first_name || userData.user.user_metadata?.first_name || "",
           last_name: profileData?.last_name || userData.user.user_metadata?.last_name || "",
           email: userData.user.email || "",
-          country: userData.user.user_metadata?.country || "Not specified",
+          country: profileData?.country || "Not specified",
           joined: profileData?.created_at || userData.user.created_at || "",
         })
       } catch (error: any) {
