@@ -93,6 +93,7 @@ export default function ProfilePage() {
         },
       })
       setIsEditing(false)
+      window.location.reload()
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
