@@ -31,6 +31,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
   const { toast } = useToast()
   const [user, setUser] = useState<User | null>(null)
+  const [userProfile, setUserProfile] = useState<{ first_name: string; last_name: string } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
 
@@ -42,16 +43,46 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         return
       }
       setUser(data.user)
+      
+      // Fetch user profile from profiles table
+      if (data.user) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', data.user.id)
+          .single()
+        
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError)
+        } else {
+          setUserProfile(profileData)
+        }
+      }
+      
       setIsLoading(false)
     }
 
     getUser()
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
         setUser(session.user)
+        
+        // Fetch user profile when user signs in
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', session.user.id)
+          .single()
+        
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError)
+        } else {
+          setUserProfile(profileData)
+        }
       } else if (event === "SIGNED_OUT") {
         setUser(null)
+        setUserProfile(null)
       }
     })
 
@@ -312,12 +343,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <ModeToggle />
               <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-muted" />
               <div className="flex items-center gap-2">
-                <div>{user.user_metadata?.first_name + " " + user.user_metadata?.last_name || user.email}</div>
+                <div>{userProfile?.first_name + " " + userProfile?.last_name || user.email}</div>
                 <Button variant="ghost" size="icon" className="rounded-full" asChild>
                   <Link href="/dashboard/profile">
                     <span className="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full">
                       <span className="flex h-full w-full items-center justify-center rounded-full bg-muted">
-                        {user.user_metadata?.first_name ? user.user_metadata.first_name[0].toUpperCase() : "U"}
+                        {userProfile?.first_name ? userProfile.first_name[0].toUpperCase() : user.email?.[0].toUpperCase() || "U"}
                       </span>
                     </span>
                     <span className="sr-only">View profile</span>
