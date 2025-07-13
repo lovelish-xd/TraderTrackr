@@ -133,8 +133,7 @@ export default function ProfilePage() {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-2xl px-2 sm:px-0">
-        <h1 className="mb-6 text-3xl font-bold">Your Profile</h1>
+      <div className="mx-auto max-w-2xl lg:max-w-4xl xl:max-w-5xl px-2 sm:px-0">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Info */}
           <Card className="rounded-2xl shadow-md">

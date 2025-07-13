@@ -234,7 +234,7 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-2xl space-y-8">
+      <div className="mx-auto max-w-2xl lg:max-w-4xl xl:max-w-5xl space-y-8">
         {authLoading ? (
           <div className="flex h-40 items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -247,9 +247,6 @@ export default function SettingsPage() {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between mb-2">
-              <h1 className="text-3xl font-bold">Settings</h1>
-            </div>
             {/* Security Settings */}
             <Card>
               <CardHeader>

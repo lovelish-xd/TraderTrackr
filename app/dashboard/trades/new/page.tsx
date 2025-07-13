@@ -213,7 +213,7 @@ export default function NewTradePage() {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-2xl lg:max-w-4xl xl:max-w-5xl">
         {authLoading ? (
           <div className="flex h-40 items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -227,7 +227,6 @@ export default function NewTradePage() {
         ) : (
           <>
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-3xl font-bold">Add New Trade</h1>
             </div>
             <form onSubmit={handleSubmit}>
               <Card className="mb-6">

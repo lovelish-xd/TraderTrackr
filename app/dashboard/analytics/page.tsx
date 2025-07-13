@@ -477,8 +477,7 @@ export default function AnalyticsPage() {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold">Analytics</h1>
+            <div className="flex items-center justify-end">
               <Select value={timeframe} onValueChange={setTimeframe}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Select timeframe" />
